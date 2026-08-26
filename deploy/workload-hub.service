@@ -1,0 +1,31 @@
+[Unit]
+Description=Zaiheng Workload Management
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=workload-hub
+Group=workload-hub
+WorkingDirectory=/opt/workload-hub
+EnvironmentFile=/etc/workload-hub.env
+Environment=GOMEMLIMIT=180MiB
+ExecStart=/opt/workload-hub/workload-hub serve
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=15
+UMask=0027
+
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+ReadWritePaths=/var/lib/workload-hub
+
+[Install]
+WantedBy=multi-user.target

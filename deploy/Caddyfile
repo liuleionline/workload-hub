@@ -1,0 +1,16 @@
+{$APP_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:8080
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+
+    log {
+        output file /var/log/caddy/workload-hub.access.log {
+            roll_size 10MiB
+            roll_keep 7
+        }
+    }
+}

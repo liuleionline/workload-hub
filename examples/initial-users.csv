@@ -1,0 +1,4 @@
+姓名,层级,是否系统管理员,移动电话,企业邮箱,执业资格,职称,初始密码
+示例管理员,部门领导,是,,admin@example.com,,,ChangeMe123!
+示例负责人,专业负责人,否,,lead@example.com,,,ChangeMe123!
+示例设计师,设计师,否,,designer@example.com,,,ChangeMe123!

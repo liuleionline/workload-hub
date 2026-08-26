@@ -1,0 +1,51 @@
+{{define "content"}}
+<section class="form-hero"><div><p class="eyebrow">ACTUAL HOURS · {{.Data.WeekEnd}}</p><h2>记录这一周真正投入在哪里</h2><p>{{.Data.WindowStart}} 至 {{.Data.WindowEnd}}。项目工时不限于40小时，请如实填写。</p></div><div class="form-stat"><span>请假</span><strong><output data-leave-output>{{hours .Data.LeaveDays}}</output><small>天</small></strong></div></section>
+{{if not .Data.CanEdit}}<div class="notice warning"><strong>当前不在填报时间</strong><span>本周窗口为{{.Data.WindowStart}}至{{.Data.WindowEnd}}；窗口内可反复修改，窗口外只能查看。</span></div>{{end}}
+{{if .Data.Submitted}}<div class="notice success worklog-submitted"><strong>本周已提交</strong><span>{{if .Data.CanEdit}}下方显示的是你已保存的全部内容。你可以继续修改、删除或新增项目、其它工作和请假，再次保存即可覆盖本周记录。{{else}}下方显示的是本周已保存内容，当前仅可查看。{{end}}</span></div>{{end}}
+{{if .CurrentUser.IsSystemAdmin}}<div class="notice info"><strong>系统管理员测试模式</strong><span>你可以随时新增、修改或清空本人本周填报；其他员工仍须在规定窗口内填报。</span></div>{{end}}
+{{if .CurrentUser.IsTestUser}}<div class="notice info"><strong>测试账号模式</strong><span>你可以随时填报和修改；本账号工时、请假和项目参与不会进入正式部门统计。</span></div>{{end}}
+{{if .Data.Carried}}<div class="notice info"><strong>已带入上周内容</strong><span>项目、工时和工作内容已作为本周草稿，你可以直接修改；“其它”工作不会被带入。</span></div>{{end}}
+<form action="/worklog" method="post" class="worklog-form" data-worklog-form novalidate>
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <input type="hidden" name="work_entries_json" value="" data-work-payload>
+  <fieldset class="worklog-fieldset" {{if not .Data.CanEdit}}disabled{{end}}>
+  <section class="panel leave-panel"><div><h3>本周可用时间调整</h3><p class="muted">法定节假日由系统处理；请假支持0.5天。即使没有可填工作，也可以提交0工时。</p></div><label>请假天数<input type="number" name="leave_days" min="0" max="7" step="0.5" value="{{.Data.LeaveDays}}" data-leave-input></label></section>
+  <section class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">WORK ITEMS</p><h2>项目与实际工时</h2><p class="work-content-guidance">第一次填写某项目时，请完整填写子项号及子项名称、建筑面积、结构形式、担任职责。后续会自动带出，只有工作内容变化时才需要修改。</p></div><button class="button secondary" type="button" data-add-work>＋ 新增工作</button></div>
+    <div class="work-rows" data-work-rows>
+    {{range .Data.Entries}}
+      {{$entry := .}}{{$subitems := index $.Data.ProjectSubitems .ProjectID}}
+      <article class="work-row {{if not .ProjectID}}is-other{{end}}" data-work-row data-project-id="{{.ProjectID}}" data-work-category="{{.WorkCategory}}">
+        <div class="row-index">01</div>
+        <label>类型<select name="entry_type[]" data-entry-type><option value="project" {{if .ProjectID}}selected{{end}}>项目</option><option value="other" {{if not .ProjectID}}selected{{end}}>其它</option></select></label>
+        <label class="project-field">项目<select name="project_choice[]" data-project-select><option value="">请选择</option>{{range $p := $.Data.Projects}}{{$saved := index $.Data.LatestWorkDetails $p.ID}}<option value="{{$p.ID}}" data-project-id="{{$p.ID}}" data-project-code="{{$p.Code}}" data-project-subitem-id="{{$saved.ProjectSubitemID}}" data-work-subitem="{{$saved.Subitem}}" data-work-area="{{$saved.Area}}" data-work-structure="{{$saved.Structure}}" data-work-role="{{$saved.Role}}" {{if eq $p.ID $entry.ProjectID}}selected{{end}}>{{$p.ShortName}} · {{$p.Code}}</option>{{end}}</select><input type="hidden" name="project_id[]" value="{{$entry.ProjectID}}" data-project-value></label>
+        <label class="hours-field">实际工时<input type="number" name="hours[]" min="0" max="168" step="0.5" value="{{.Hours}}" required></label>
+        <button class="icon-button" type="button" data-remove-work aria-label="删除此项">×</button>
+        <div class="work-details-grid">
+          <label class="subitem-choice-field">项目子项<select data-project-subitem-select data-selected-subitem-id="{{.ProjectSubitemID}}"><option value="">请选择子项</option>{{range $subitems}}<option value="{{.ID}}" data-name="{{.Name}}" data-area="{{.Area}}" data-structure="{{.Structure}}" {{if eq .ID $entry.ProjectSubitemID}}selected{{end}}>{{.Name}}{{if .Structure}} · {{.Structure}}{{end}}</option>{{end}}</select><input type="hidden" name="project_subitem_id[]" data-project-subitem-value value="{{.ProjectSubitemID}}"><input type="text" name="work_subitem[]" data-work-subitem value="{{if .WorkSubitem}}{{.WorkSubitem}}{{else}}{{.WorkContent}}{{end}}" placeholder="项目尚未维护子项时手动填写"></label>
+          <label>建筑面积（㎡）<input type="number" name="work_area[]" data-work-area min="0" step="0.1" value="{{.WorkArea}}" placeholder="如：15600"></label>
+          <label>结构形式<input type="text" name="work_structure[]" data-work-structure value="{{.WorkStructure}}" placeholder="如：混凝土框架结构"></label>
+          <label>担任职责<input type="text" name="work_role[]" data-work-role list="work-role-options" value="{{.WorkRole}}" placeholder="独立设计、校对、审核等"></label>
+        </div>
+        <label class="other-field">其它工作的具体内容<input type="text" name="other_description[]" value="{{.OtherDescription}}" placeholder="如：临时工作、工地验收、部门协调"></label>
+        <input type="hidden" name="end_participation[]" value="{{if .EndParticipation}}1{{else}}0{{end}}" data-end-value>
+        <label class="end-field check-line"><input type="checkbox" data-end-check {{if .EndParticipation}}checked{{end}}>本周后结束本人参与</label>
+      </article>
+    {{else}}
+      <article class="work-row" data-work-row data-project-id="">
+        <div class="row-index">01</div><label>类型<select name="entry_type[]" data-entry-type><option value="project">项目</option><option value="other">其它</option></select></label>
+        <label class="project-field">项目<select name="project_choice[]" data-project-select><option value="">请选择</option>{{range $p := .Data.Projects}}{{$saved := index $.Data.LatestWorkDetails $p.ID}}<option value="{{$p.ID}}" data-project-id="{{$p.ID}}" data-project-code="{{$p.Code}}" data-project-subitem-id="{{$saved.ProjectSubitemID}}" data-work-subitem="{{$saved.Subitem}}" data-work-area="{{$saved.Area}}" data-work-structure="{{$saved.Structure}}" data-work-role="{{$saved.Role}}">{{$p.ShortName}} · {{$p.Code}}</option>{{end}}</select><input type="hidden" name="project_id[]" value="" data-project-value></label>
+        <label class="hours-field">实际工时<input type="number" name="hours[]" min="0" max="168" step="0.5" required></label><button class="icon-button" type="button" data-remove-work aria-label="删除此项">×</button>
+        <div class="work-details-grid"><label class="subitem-choice-field">项目子项<select data-project-subitem-select><option value="">请先选择项目</option></select><input type="hidden" name="project_subitem_id[]" data-project-subitem-value value=""><input type="text" name="work_subitem[]" data-work-subitem placeholder="项目尚未维护子项时手动填写"></label><label>建筑面积（㎡）<input type="number" name="work_area[]" data-work-area min="0" step="0.1" placeholder="如：15600"></label><label>结构形式<input type="text" name="work_structure[]" data-work-structure placeholder="如：混凝土框架结构"></label><label>担任职责<input type="text" name="work_role[]" data-work-role list="work-role-options" placeholder="独立设计、校对、审核等"></label></div>
+        <label class="other-field">其它工作的具体内容<input type="text" name="other_description[]" placeholder="如：临时工作、工地验收、部门协调"></label><input type="hidden" name="end_participation[]" value="0" data-end-value><label class="end-field check-line"><input type="checkbox" data-end-check>本周后结束本人参与</label>
+      </article>
+    {{end}}
+    </div>
+    <div class="form-footer"><div><span>已填合计</span><strong><output data-total-hours>0.0</output> 小时</strong></div><div class="form-actions">{{if and .CurrentUser.IsSystemAdmin .Data.Submitted}}<button class="button ghost danger" type="submit" name="action" value="clear" formnovalidate data-clear-worklog>清空本人本周填报</button>{{end}}<button class="button primary" type="submit">保存本周工时</button></div></div>
+  </section>
+  </fieldset>
+</form>
+<div hidden data-project-subitem-catalog>{{range $p := .Data.Projects}}{{$items := index $.Data.ProjectSubitems $p.ID}}{{range $items}}<span data-project-subitem-source data-project-id="{{$p.ID}}" data-subitem-id="{{.ID}}" data-name="{{.Name}}" data-area="{{.Area}}" data-structure="{{.Structure}}"></span>{{end}}{{end}}</div>
+<datalist id="work-role-options"><option value="独立设计"><option value="部分设计（请写明设计部分）"><option value="校对"><option value="审核"></datalist>
+<template id="work-row-template"><article class="work-row" data-work-row data-project-id=""><div class="row-index">01</div><label>类型<select name="entry_type[]" data-entry-type><option value="project">项目</option><option value="other">其它</option></select></label><label class="project-field">项目<select name="project_choice[]" data-project-select><option value="">请选择</option>{{range $p := .Data.Projects}}{{$saved := index $.Data.LatestWorkDetails $p.ID}}<option value="{{$p.ID}}" data-project-id="{{$p.ID}}" data-project-code="{{$p.Code}}" data-project-subitem-id="{{$saved.ProjectSubitemID}}" data-work-subitem="{{$saved.Subitem}}" data-work-area="{{$saved.Area}}" data-work-structure="{{$saved.Structure}}" data-work-role="{{$saved.Role}}">{{$p.ShortName}} · {{$p.Code}}</option>{{end}}</select><input type="hidden" name="project_id[]" value="" data-project-value></label><label class="hours-field">实际工时<input type="number" name="hours[]" min="0" max="168" step="0.5" required></label><button class="icon-button" type="button" data-remove-work aria-label="删除此项">×</button><div class="work-details-grid"><label class="subitem-choice-field">项目子项<select data-project-subitem-select><option value="">请先选择项目</option></select><input type="hidden" name="project_subitem_id[]" data-project-subitem-value value=""><input type="text" name="work_subitem[]" data-work-subitem placeholder="项目尚未维护子项时手动填写"></label><label>建筑面积（㎡）<input type="number" name="work_area[]" data-work-area min="0" step="0.1" placeholder="如：15600"></label><label>结构形式<input type="text" name="work_structure[]" data-work-structure placeholder="如：混凝土框架结构"></label><label>担任职责<input type="text" name="work_role[]" data-work-role list="work-role-options" placeholder="独立设计、校对、审核等"></label></div><label class="other-field">其它工作的具体内容<input type="text" name="other_description[]" placeholder="如：临时工作、工地验收、部门协调"></label><input type="hidden" name="end_participation[]" value="0" data-end-value><label class="end-field check-line"><input type="checkbox" data-end-check>本周后结束本人参与</label></article></template>
+{{end}}

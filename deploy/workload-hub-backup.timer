@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly backup for Zaiheng Workload Management
+
+[Timer]
+OnCalendar=Sat *-*-* 18:00:00 Asia/Shanghai
+Persistent=true
+Unit=workload-hub-backup.service
+
+[Install]
+WantedBy=timers.target

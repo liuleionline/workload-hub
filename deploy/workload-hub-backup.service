@@ -1,0 +1,20 @@
+[Unit]
+Description=Backup Zaiheng Workload Management database
+After=network-online.target workload-hub.service
+Wants=network-online.target
+ConditionPathExists=/var/lib/workload-hub/workload.db
+
+[Service]
+Type=oneshot
+User=workload-hub
+Group=workload-hub
+EnvironmentFile=/etc/workload-hub.env
+ExecStart=/usr/local/sbin/workload-hub-backup
+Nice=10
+IOSchedulingClass=idle
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/workload-hub /var/backups/workload-hub

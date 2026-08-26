@@ -1,0 +1,25 @@
+{{define "content"}}
+<section class="page-actions"><div><p class="eyebrow">LOGIN GALLERY</p><h2>登录背景图库</h2><p class="muted">每次打开登录页时，系统会从当前图库随机选择一张。建议使用横向照片，分辨率不低于1920×1080。</p></div><span class="pill private">仅系统管理员</span></section>
+<section class="panel background-upload">
+  <div class="panel-heading"><div><h2>增加背景图片</h2><p class="muted">支持 JPG、PNG、WebP，单张不超过8MB。</p></div></div>
+  <form action="/admin/backgrounds" method="post" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <label>图片名称<input name="name" maxlength="80" placeholder="例如：2026年部门团建"></label>
+    <label>选择图片<input type="file" name="image" accept="image/jpeg,image/png,image/webp" required></label>
+    <button class="button primary" type="submit">加入图库</button>
+  </form>
+</section>
+<section class="background-grid">
+{{range .Data.Items}}
+  <article class="panel background-card">
+    <img src="/login-backgrounds/{{.ID}}" alt="{{.Name}}" loading="lazy">
+    <div><span><strong>{{.Name}}</strong><small>加入时间：{{.CreatedAt}}</small></span>
+      <form action="/admin/backgrounds/{{.ID}}/delete" method="post" data-confirm="确定从登录背景图库删除这张图片吗？">
+        <input type="hidden" name="csrf_token" value="{{$.CSRFToken}}">
+        <button class="link-button danger" type="submit">删除</button>
+      </form>
+    </div>
+  </article>
+{{else}}<div class="empty-state"><span>暂无背景图片</span><p>请先上传一张图片。</p></div>{{end}}
+</section>
+{{end}}

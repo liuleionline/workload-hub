@@ -1,0 +1,21 @@
+name: 功能建议
+description: 提议清晰、可验证的功能改进
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决的问题
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+    validations:
+      required: true
+  - type: textarea
+    id: permissions
+    attributes:
+      label: 角色、权限与数据口径影响

@@ -1,0 +1,37 @@
+{{define "content"}}
+<form action="/" method="get" class="filter-bar overview-period-filter"><label>总览统计口径<select name="period"><option value="week" {{if eq .Data.Period "week"}}selected{{end}}>周（默认）</option><option value="month" {{if eq .Data.Period "month"}}selected{{end}}>月</option><option value="quarter" {{if eq .Data.Period "quarter"}}selected{{end}}>季</option><option value="year" {{if eq .Data.Period "year"}}selected{{end}}>年</option></select></label><label>年度<input type="number" name="year" min="2020" max="2100" value="{{if .Data.PeriodSelection.Year}}{{.Data.PeriodSelection.Year}}{{else}}{{.Now.Year}}{{end}}"></label><label>月份<select name="month"><option value="1" {{if eq .Data.PeriodSelection.Month 1}}selected{{end}}>1月</option><option value="2" {{if eq .Data.PeriodSelection.Month 2}}selected{{end}}>2月</option><option value="3" {{if eq .Data.PeriodSelection.Month 3}}selected{{end}}>3月</option><option value="4" {{if eq .Data.PeriodSelection.Month 4}}selected{{end}}>4月</option><option value="5" {{if eq .Data.PeriodSelection.Month 5}}selected{{end}}>5月</option><option value="6" {{if eq .Data.PeriodSelection.Month 6}}selected{{end}}>6月</option><option value="7" {{if eq .Data.PeriodSelection.Month 7}}selected{{end}}>7月</option><option value="8" {{if eq .Data.PeriodSelection.Month 8}}selected{{end}}>8月</option><option value="9" {{if eq .Data.PeriodSelection.Month 9}}selected{{end}}>9月</option><option value="10" {{if eq .Data.PeriodSelection.Month 10}}selected{{end}}>10月</option><option value="11" {{if eq .Data.PeriodSelection.Month 11}}selected{{end}}>11月</option><option value="12" {{if eq .Data.PeriodSelection.Month 12}}selected{{end}}>12月</option></select></label><label>季度<select name="quarter"><option value="1" {{if eq .Data.PeriodSelection.Quarter 1}}selected{{end}}>第一季度</option><option value="2" {{if eq .Data.PeriodSelection.Quarter 2}}selected{{end}}>第二季度</option><option value="3" {{if eq .Data.PeriodSelection.Quarter 3}}selected{{end}}>第三季度</option><option value="4" {{if eq .Data.PeriodSelection.Quarter 4}}selected{{end}}>第四季度</option></select></label><button class="button secondary" type="submit">切换</button><span class="filter-summary">当前：{{.Data.PeriodLabel}}</span></form>
+{{if eq .Data.Period "week"}}<form action="/" method="get" class="filter-bar week-jump-filter"><input type="hidden" name="period" value="week"><label>统计周（周五）<input type="date" name="week_end" value="{{.Data.WeekEnd}}"></label><button class="button secondary" type="submit">查看该周</button><span class="filter-summary">默认显示最近一个已填报周</span></form>{{end}}
+<section class="hero-grid">
+  <article class="metric-card metric-primary"><div class="metric-label"><span>{{.Data.PeriodLabel}}个人负荷</span><i class="status-dot {{.Data.Self.LoadBand}}"></i></div><strong>{{pct .Data.Self.LoadRate}}</strong><p>{{hours .Data.Self.ActualHours}} / 可用 {{hours .Data.Self.AvailableHours}} 小时 · 驻场 {{hours .Data.Self.SiteHours}}h</p></article>
+{{if .Data.ShowForecast}}  <article class="metric-card"><div class="metric-label"><span>负责人预估</span></div><strong>{{hours .Data.Self.ForecastHours}}<small>h</small></strong><p>{{if hasPerm "dashboard.bias"}}{{if .Data.Self.HasBias}}实际/预计 {{printf "%.2f" .Data.Self.Bias}}{{else}}本周暂无有效配对预估{{end}}{{else}}本周负责人预估工时{{end}}</p></article>{{end}}
+  {{if hasPerm "dashboard.department"}}
+  <article class="metric-card"><div class="metric-label"><span>{{.Data.PeriodLabel}}部门总负荷</span></div><strong>{{pct .Data.DepartmentRate}}</strong><p>{{hours .Data.DepartmentActual}} / {{hours .Data.DepartmentCapacity}} 小时</p></article>
+  <article class="metric-card"><div class="metric-label"><span>连续超负荷报警</span></div><strong>{{.Data.AlertCount}}<small>人</small></strong><p>{{.Data.BiasReadyCount}} 人已有修正负荷数据</p></article>
+  {{end}}
+</section>
+
+<section class="panel chart-panel">
+  <div class="panel-heading"><div><p class="eyebrow">WEEKLY RHYTHM</p><h2>我的八周负荷趋势</h2></div><div class="legend"><span class="actual">实际</span>{{if .Data.ShowForecast}}<span class="forecast">预估</span>{{end}}</div></div>
+  <canvas class="trend-chart" width="920" height="280" data-points='{{json .Data.SelfTrend}}' aria-label="{{if .Data.ShowForecast}}八周实际与预计工时趋势{{else}}八周实际工时趋势{{end}}"></canvas>
+</section>
+
+{{if hasPerm "dashboard.team"}}
+<section class="split-grid">
+  <article class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">TEAM LOAD</p><h2>{{if hasPerm "dashboard.department"}}部门人员负荷{{else}}负责项目人员负荷{{end}}</h2></div><span class="pill">{{len .Data.Team}} 人</span></div>
+    <div class="table-wrap"><table><thead><tr><th>员工</th><th>实际</th><th>可用</th><th>负荷</th></tr></thead><tbody>{{range .Data.Team}}<tr><td><strong>{{.Name}}</strong><small>{{roleName .Role}}</small></td><td>{{hours .ActualHours}}h</td><td>{{hours .AvailableHours}}h</td><td><span class="load-pill {{.LoadBand}}">{{pct .LoadRate}}</span>{{if .Alert}}<span class="alert-mark">报警</span>{{end}}</td></tr>{{else}}<tr><td colspan="4" class="empty">尚无人员数据</td></tr>{{end}}</tbody></table></div>
+  </article>
+  <article class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">PROJECT CAPACITY</p><h2>项目人力占用</h2></div><a class="text-link" href="/forecasts">管理预估</a></div>
+    <div class="project-bars">{{range .Data.Projects}}<div class="project-bar"><div><strong>{{.ShortName}}</strong><small>{{.Size}} · {{.MemberCount}}人</small></div><div class="bar-track"><i style="--bar:{{printf "%.0f" .LoadRate}}"></i></div><span>{{hours .ActualHours}}h</span></div>{{else}}<p class="empty">尚无负责项目</p>{{end}}</div>
+  </article>
+</section>
+{{end}}
+
+{{if hasPerm "dashboard.bias"}}
+<section class="panel confidential">
+  <div class="panel-heading"><div><p class="eyebrow">MANAGEMENT ONLY</p><h2>实际 / 预计偏差与修正负荷</h2></div><a class="button secondary" href="/bias">打开完整偏差看板</a></div>
+  <div class="table-wrap"><table><thead><tr><th>员工</th><th>实际工时</th><th>预计工时</th><th>偏差系数</th><th>修正工时</th><th>修正负荷</th></tr></thead><tbody>{{range .Data.Department}}<tr><td><strong>{{.Name}}</strong></td><td>{{hours .ProjectActualHours}}h</td><td>{{hours .ProjectForecastHours}}h</td><td>{{if .HasBias}}{{printf "%.2f" .Bias}}{{else}}—{{end}}</td><td>{{if .HasAdjusted}}{{hours .AdjustedHours}}h{{else}}积累中{{end}}</td><td>{{if .HasAdjusted}}{{pct .AdjustedRate}}{{else}}—{{end}}</td></tr>{{end}}</tbody></table></div>
+</section>
+{{end}}
+{{end}}

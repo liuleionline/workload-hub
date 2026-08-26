@@ -1,0 +1,63 @@
+{{define "base.html"}}
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#0B6655">
+  <title>{{.Title}} · 载衡</title>
+  <link rel="icon" href="/assets/favicon.svg?v=20260824-1" type="image/svg+xml">
+  <link rel="alternate icon" href="/assets/favicon.ico?v=20260824-1">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=20260824-1">
+  <link rel="manifest" href="/assets/site.webmanifest?v=20260824-1">
+  <link rel="stylesheet" href="/assets/app.css?v=20260824-1">
+  <script defer src="/assets/app.js?v=20260821-1"></script>
+</head>
+<body class="{{if .CurrentUser}}app-shell{{else}}auth-shell{{end}}">
+{{if .CurrentUser}}
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="载衡首页">
+      <img class="brand-mark" src="/assets/logo-mark.svg?v=20260824-1" width="38" height="38" alt="">
+      <span><strong>载衡</strong><small>人力负荷管理</small></span>
+    </a>
+    <nav class="nav" aria-label="主要功能">
+      <a href="/" class="{{if eq .Page "dashboard"}}active{{end}}"><span>总览</span><small>01</small></a>
+      {{if hasPerm "dashboard.department"}}<a href="/department" class="{{if or (eq .Page "department") (eq .Page "employee-detail")}}active{{end}}"><span>部门分析</span><small>02</small></a>{{end}}
+      {{if hasPerm "dashboard.department"}}<a href="/period/employees" class="{{if or (eq .Page "period-employees") (eq .Page "period-projects")}}active{{end}}"><span>周期看板</span><small>03</small></a>{{end}}
+      {{if hasPerm "dashboard.bias"}}<a href="/bias" class="{{if eq .Page "bias"}}active{{end}}"><span>偏差分析</span><small>03</small></a>{{end}}
+      {{if hasPerm "worklog.submit"}}<a href="/worklog" class="{{if eq .Page "worklog"}}active{{end}}"><span>工时填报</span><small>02</small></a>{{end}}
+      {{if or (hasPerm "forecast.manage_own") (hasPerm "forecast.manage_all")}}<a href="/forecasts" class="{{if eq .Page "forecasts"}}active{{end}}"><span>下周预估</span><small>03</small></a>{{end}}
+      {{if or (hasPerm "projects.view_own") (hasPerm "projects.view_all") (hasPerm "projects.create")}}<a href="/projects" class="{{if or (eq .Page "projects") (eq .Page "project-form") (eq .Page "project-detail")}}active{{end}}"><span>项目管理</span><small>04</small></a>{{end}}
+      {{if or (hasPerm "exports.self") (hasPerm "exports.all")}}<a href="/reports" class="{{if eq .Page "reports"}}active{{end}}"><span>统计导出</span><small>05</small></a>{{end}}
+      {{if .CurrentUser.IsSystemAdmin}}
+      <span class="nav-section">系统后台</span>
+      <a href="/admin/users" class="{{if or (eq .Page "users") (eq .Page "permissions")}}active{{end}}"><span>员工与权限</span><small>A1</small></a>
+      <a href="/admin/settings" class="{{if eq .Page "settings"}}active{{end}}"><span>系统设置</span><small>A2</small></a>
+      <a href="/admin/backgrounds" class="{{if eq .Page "backgrounds"}}active{{end}}"><span>登录背景</span><small>A3</small></a>
+      <a href="/admin/backups" class="{{if eq .Page "backups"}}active{{end}}"><span>备份与恢复</span><small>A4</small></a>
+      {{end}}
+      {{if hasPerm "audit.view"}}<a href="/admin/audit" class="{{if eq .Page "audit"}}active{{end}}"><span>操作审计</span><small>A4</small></a>{{end}}
+    </nav>
+    <div class="sidebar-foot">
+      <div class="user-chip"><span class="avatar">{{printf "%.1s" .CurrentUser.Name}}</span><span><strong>{{.CurrentUser.Name}}</strong><small>{{.CurrentUser.RoleName}}{{if .CurrentUser.IsSystemAdmin}} · 系统管理员{{end}}{{if .CurrentUser.IsTestUser}} · 测试用户{{end}}</small></span></div>
+      <form action="/logout" method="post"><input type="hidden" name="csrf_token" value="{{.CSRFToken}}"><button class="link-button" type="submit">退出登录</button></form>
+    </div>
+  </aside>
+  <button class="sidebar-backdrop" type="button" data-menu-backdrop aria-label="关闭菜单"></button>
+  <main class="main">
+    <header class="topbar"><button class="menu-button" type="button" data-menu-toggle aria-label="展开菜单">☰</button><div><p class="eyebrow">WORKLOAD CONTROL</p><h1>{{.Title}}</h1></div><time>{{.Now.Format "2006年1月2日"}}</time></header>
+    {{if .ReportReminder}}<div class="notice warning"><strong>本周填报窗口已开放</strong><span>当前窗口为{{.ReportWindowLabel}}。请完成实际工时填报；专业负责人同时完成下周工时预估。</span><a href="/worklog">立即填写</a></div>{{end}}
+    {{if .IncompleteProjectCount}}<div class="notice info"><strong>{{if .CurrentUser.MustChangePassword}}首次登录后请校核项目{{else}}有 {{.IncompleteProjectCount}} 个项目待完善{{end}}</strong><span>请核对项目编号、项目全名、项目阶段、开始日期和预计结束日期等信息。</span><a href="/projects">去校核</a></div>{{end}}
+    {{if .Flash}}<div class="notice success" data-auto-dismiss><strong>已完成</strong><span>{{.Flash}}</span></div>{{end}}
+    {{if .Error}}<div class="notice error"><strong>需要检查</strong><span>{{.Error}}</span></div>{{end}}
+    <div class="page-content">{{template "content" .}}</div>
+  </main>
+{{else}}
+  {{if .Error}}<div class="auth-error">{{.Error}}</div>{{end}}
+  {{if .Flash}}<div class="auth-success">{{.Flash}}</div>{{end}}
+  {{template "content" .}}
+{{end}}
+</body>
+</html>
+{{end}}

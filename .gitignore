@@ -1,0 +1,59 @@
+# Local configuration and runtime state
+/.env
+/.env.*
+!/.env.example
+/data/
+/backup/
+/tmp/
+
+# Build and generated artifacts
+/bin/
+/dist/
+/output/
+/outputs/
+*.exe
+*.test
+*.out
+*.log
+coverage.*
+__pycache__/
+*.py[cod]
+
+# Databases, exports and archives may contain personal or business data
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.csv
+!/examples/*.csv
+*.xls
+*.xlsx
+*.gz
+*.zip
+*.tar
+*.tar.gz
+
+# Private deployment material
+id_ed25519*
+id_rsa*
+*.pem
+*.key
+known_hosts*
+ssh_config
+CODEX_HANDOFF.md
+FINGERPRINTS.txt
+
+# Locally retained team photographs; public builds use the SVG defaults
+/web/static/login-bg-*.jpg
+/web/static/login-bg-*.jpeg
+/web/static/login-bg-*.png
+/web/static/login-bg-*.webp
+
+# Internal one-off project-history generator
+/pdf_summary_builder.py
+
+# Editor and operating-system files
+.DS_Store
+Thumbs.db
+/.idea/
+/.vscode/
