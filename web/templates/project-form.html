@@ -1,0 +1,54 @@
+{{define "content"}}
+<div class="back-row"><a class="text-link" href="/projects">← 返回项目名单</a></div>
+<form action="{{if .Data.IsNew}}/projects{{else}}/projects/{{.Data.Project.ID}}{{end}}" method="post" class="panel project-form">
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+  <div class="panel-heading"><div><p class="eyebrow">PROJECT PROFILE</p><h2>{{if .Data.IsNew}}建立项目档案{{else}}编辑项目档案{{end}}</h2></div><span class="pill">{{if .Data.Project.IsIncomplete}}初始导入项目，资料待校核{{else}}字段带 * 为必填{{end}}</span></div>
+  <div class="form-grid three">
+    <label>项目编号 *<input name="code" required value="{{.Data.Project.Code}}" placeholder="临时编号 INIT-001，完善时可替换"></label>
+    <label>项目简称 *<input name="short_name" required value="{{.Data.Project.ShortName}}" placeholder="用于看板，如：示例研发中心"></label>
+    <label>项目类型 *<select name="size" required>{{range $s := (seq 4)}}{{end}}<option {{if eq .Data.Project.Size "超大"}}selected{{end}}>超大</option><option {{if eq .Data.Project.Size "大"}}selected{{end}}>大</option><option {{if eq .Data.Project.Size "中"}}selected{{end}}>中</option><option {{if eq .Data.Project.Size "小"}}selected{{end}}>小</option></select></label>
+    <label class="span-2">项目名称 *<input name="name" required value="{{.Data.Project.Name}}"></label>
+    <label>项目负责人 / 总设计师 *<input name="chief_designer" required value="{{.Data.Project.ChiefDesigner}}" placeholder="可填写公司其他员工姓名"></label>
+    <label>开始日期 *<input type="date" name="start_date" required value="{{.Data.Project.StartDate}}"></label>
+    <label>预计结束日期 *<input type="date" name="expected_end_date" required value="{{.Data.Project.ExpectedEndDate}}"></label>
+  </div>
+  <fieldset class="project-stage-fieldset"><legend>项目阶段 *</legend><p class="muted">允许多选；已有项目请由专业负责人结合当前工作内容补全。</p><div class="stage-check-grid">{{range .Data.StageOptions}}<label class="check-card"><input type="checkbox" name="stages" value="{{.}}" {{if $.Data.Project.HasStage .}}checked{{end}}><span><strong>{{.}}</strong></span></label>{{end}}</div></fieldset>
+  <hr>
+  <section class="project-intro-fields">
+    <div class="panel-heading"><div><p class="eyebrow">PROJECT BRIEF</p><h3>项目简介</h3><p class="muted">已有项目由专业负责人首次登录后补全；项目特点可选，其余四项必填。</p></div></div>
+    <div class="form-grid two">
+      <label>项目地址 *<input name="intro_address" required value="{{.Data.Project.IntroAddress}}" placeholder="项目所在城市、区县或具体地址"></label>
+      <label>项目类别 *<input name="intro_type" required value="{{.Data.Project.IntroType}}" placeholder="如：工业、公共建筑、电子、芯片、标准厂房"></label>
+      <label class="span-2">项目规模 *<textarea name="intro_scale" rows="3" required placeholder="总建筑面积、建安总投资及其它规模指标">{{.Data.Project.IntroScale}}</textarea></label>
+      <label class="span-2">子项组成 *<textarea name="intro_components" rows="4" required placeholder="主要子项、各子项用途及规模">{{.Data.Project.IntroComponents}}</textarea></label>
+      <label class="span-2">项目特点（可选）<textarea name="intro_features" rows="4" placeholder="如：地基特殊、重要业主、总承包、荷载大、微振要求、工期紧等">{{.Data.Project.IntroFeatures}}</textarea></label>
+    </div>
+  </section>
+  <hr>
+  <section class="project-subitems-editor" data-project-subitems-editor>
+    <div class="panel-heading"><div><p class="eyebrow">PROJECT SUBITEMS</p><h3>项目子项</h3><p class="muted">按项目资料逐项维护。设计师填报项目工时时，将直接从这里选择参与子项。</p></div><button class="button secondary" type="button" data-add-project-subitem>＋ 添加子项</button></div>
+    <div class="project-subitem-rows" data-project-subitem-rows>
+      {{range .Data.Project.Subitems}}
+      <article class="project-subitem-row" data-project-subitem-row>
+        <span class="subitem-index">01</span><input type="hidden" name="subitem_id[]" value="{{.ID}}">
+        <label>子项号及子项名称 *<input name="subitem_name[]" value="{{.Name}}" placeholder="如：101生产厂房"></label>
+        <label>建筑面积（m²）<input type="number" name="subitem_area[]" min="0" step="0.1" value="{{.Area}}"></label>
+        <label>结构形式<input name="subitem_structure[]" value="{{.Structure}}" placeholder="如：钢筋混凝土框架结构"></label>
+        <label>备注<input name="subitem_notes[]" value="{{.Notes}}" placeholder="其它需要说明的信息"></label>
+        <button class="icon-button" type="button" data-remove-project-subitem aria-label="移除此子项">×</button>
+      </article>
+      {{else}}
+      <p class="empty-state-inline" data-project-subitem-empty>尚未添加子项，可稍后完善。</p>
+      {{end}}
+    </div>
+  </section>
+  <hr>
+  {{if not .Data.CanManageResponsibilities}}{{range .Data.Project.Leads}}<input type="hidden" name="lead_ids" value="{{.ID}}">{{end}}<input type="hidden" name="executing_lead_user_id" value="{{.Data.Project.ExecutingLeadUserID}}"><p class="notice info project-responsibility-note">你可以校核和完善项目基本资料；专业负责人名单和执行负责人请由项目创建人、当前执行负责人或部门领导调整。</p>{{end}}
+  <div class="responsible-grid">
+    <fieldset {{if not .Data.CanManageResponsibilities}}disabled{{end}}><legend>专业负责人 *</legend><p class="muted">超大项目最多2人，其他项目1人。</p><div class="check-grid">{{range .Data.Candidates}}<label class="check-card"><input type="checkbox" name="lead_ids" value="{{.ID}}" {{if $.Data.Project.HasLead .ID}}checked{{end}}><span><strong>{{.Name}}</strong><small>{{.RoleName}}</small></span></label>{{end}}</div></fieldset>
+    <label>执行专业负责人 *<select name="executing_lead_user_id" required {{if not .Data.CanManageResponsibilities}}disabled{{end}}><option value="">请选择</option>{{range .Data.Candidates}}<option value="{{.ID}}" {{if eq .ID $.Data.Project.ExecutingLeadUserID}}selected{{end}}>{{.Name}} · {{.RoleName}}</option>{{end}}</select><small>由此人填写预估、管理并完成项目。</small></label>
+  </div>
+  <div class="form-footer"><a class="button ghost" href="/projects">取消</a><button class="button primary" type="submit">{{if .Data.IsNew}}创建项目{{else}}保存修改{{end}}</button></div>
+</form>
+<template id="project-subitem-template"><article class="project-subitem-row" data-project-subitem-row><span class="subitem-index">01</span><input type="hidden" name="subitem_id[]" value=""><label>子项号及子项名称 *<input name="subitem_name[]" placeholder="如：101生产厂房"></label><label>建筑面积（m²）<input type="number" name="subitem_area[]" min="0" step="0.1"></label><label>结构形式<input name="subitem_structure[]" placeholder="如：钢筋混凝土框架结构"></label><label>备注<input name="subitem_notes[]" placeholder="其它需要说明的信息"></label><button class="icon-button" type="button" data-remove-project-subitem aria-label="移除此子项">×</button></article></template>
+{{end}}

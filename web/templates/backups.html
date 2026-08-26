@@ -1,0 +1,19 @@
+{{define "content"}}
+<section class="page-actions"><div><p class="eyebrow">DATA ARCHIVE</p><h2>数据备份与恢复</h2><p class="muted">系统管理员可以查看、下载和恢复应用备份；自动执行方式由使用者自行配置。</p></div><span class="pill private">仅系统管理员可见</span></section>
+<section class="hero-grid backup-summary">
+  <article class="metric-card metric-primary"><div class="metric-label"><span>备份周期</span></div><strong class="backup-schedule">{{.Data.Schedule}}</strong><p>自动执行方式由使用者自行安排</p></article>
+  <article class="metric-card"><div class="metric-label"><span>保留数量</span></div><strong>{{.Data.RetentionCount}}<small>周</small></strong><p>新备份生成后滚动清理</p></article>
+  <article class="metric-card"><div class="metric-label"><span>可下载备份</span></div><strong>{{len .Data.Files}}<small>份</small></strong><p>建议另存到独立位置</p></article>
+  <article class="metric-card"><div class="metric-label"><span>最新备份状态</span></div><strong class="backup-state">{{if .Data.Latest}}{{if .Data.Latest.Downloaded}}已存档{{else}}待下载{{end}}{{else}}尚未生成{{end}}</strong><p>{{if .Data.Latest}}{{.Data.Latest.CreatedLabel}}{{else}}生成备份后自动出现{{end}}</p></article>
+</section>
+{{if and .Data.Latest (not .Data.Latest.Downloaded)}}<section class="backup-callout"><div><span>最新备份待独立存档</span><strong>{{.Data.Latest.Name}}</strong><p>{{.Data.Latest.CreatedLabel}} · {{.Data.Latest.SizeLabel}}</p></div><a class="button primary" href="/admin/backups/download?file={{.Data.Latest.Name}}">下载最新备份</a></section>{{end}}
+<section class="panel backup-list"><div class="panel-heading"><div><p class="eyebrow">BACKUP FILES</p><h2>应用备份文件</h2><p class="muted">“已下载”按当前系统管理员账号分别记录，再次下载也会写入操作审计。</p></div></div><div class="table-wrap"><table><thead><tr><th>备份文件</th><th>生成时间</th><th>大小</th><th>本账号存档状态</th><th></th></tr></thead><tbody>{{range .Data.Files}}<tr><td><strong>{{.Name}}</strong></td><td>{{.CreatedLabel}}</td><td>{{.SizeLabel}}</td><td>{{if .Downloaded}}<span class="status-tag active">已下载</span><small>{{.DownloadedAt}}</small>{{else}}<span class="status-tag backup-pending">待下载</span>{{end}}</td><td><a class="button mini" href="/admin/backups/download?file={{.Name}}">{{if .Downloaded}}再次下载{{else}}下载备份{{end}}</a></td></tr>{{else}}<tr><td colspan="5" class="empty">当前备份目录中暂无可下载文件。</td></tr>{{end}}</tbody></table></div></section>
+<section class="panel restore-panel">
+  <div class="panel-heading"><div><p class="eyebrow">DISASTER RECOVERY</p><h2>从备份恢复</h2><p class="warning-copy">恢复会用备份内容替换当前业务数据，并注销所有登录会话。系统会先自动生成一份恢复前保护备份。</p></div></div>
+  <form action="/admin/backups/restore" method="post" enctype="multipart/form-data" data-confirm="确定用所选备份替换当前系统数据吗？系统会先创建恢复前保护备份，随后所有人员需要重新登录。">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <div class="inline-form"><input type="file" name="backup_file" accept=".db,.gz,application/gzip,application/octet-stream" required><button class="button primary" type="submit">校验并恢复</button></div>
+  </form>
+</section>
+<section class="panel backup-guidance"><div class="panel-heading"><div><p class="eyebrow">ARCHIVE CHECKLIST</p><h2>存档建议</h2></div></div><div class="backup-steps"><div><strong>1</strong><span>定期生成并检查备份</span></div><div><strong>2</strong><span>下载到独立存储位置</span></div><div><strong>3</strong><span>定期抽查备份可恢复性</span></div></div></section>
+{{end}}

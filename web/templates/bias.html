@@ -1,0 +1,15 @@
+{{define "content"}}
+<section class="page-actions"><div><p class="eyebrow">MANAGEMENT ONLY</p><h2>员工偏差系数与修正负荷</h2><p class="muted">仅比较同一员工、同一周且实际与预估同时存在的同一项目；“其它”及未匹配项目不参与系数计算。</p></div><span class="pill private">仅部门领导可见</span></section>
+<section class="hero-grid bias-summary">
+  <article class="metric-card metric-primary"><div class="metric-label"><span>查看周次</span></div><strong class="date-value">{{.Data.WeekEnd}}</strong><p>可切换历史周次复核</p></article>
+  <article class="metric-card"><div class="metric-label"><span>本周有效系数</span></div><strong>{{.Data.ValidCount}}<small>人</small></strong><p>存在同项目实际与预估配对</p></article>
+  <article class="metric-card"><div class="metric-label"><span>平均偏差系数</span></div><strong>{{if .Data.ValidCount}}{{printf "%.2f" .Data.AverageBias}}{{else}}—{{end}}</strong><p>仅作部门资源判断参考</p></article>
+  <article class="metric-card"><div class="metric-label"><span>已启用修正</span></div><strong>{{.Data.AdjustedCount}}<small>人</small></strong><p>连续填报5周且最近4周系数有效</p></article>
+</section>
+<form method="get" action="/bias" class="filter-bar bias-filter"><label>周截止日<input type="date" name="week_end" value="{{.Data.WeekEnd}}"></label><button class="button secondary" type="submit">查看该周</button></form>
+<section class="panel confidential">
+  <div class="panel-heading"><div><p class="eyebrow">MATCHED PROJECT HOURS</p><h2>逐员工计算结果</h2></div><span class="pill">偏差系数 = 配对项目实际工时 ÷ 配对项目预计工时</span></div>
+  <div class="table-wrap"><table><thead><tr><th>员工</th><th>全部实际</th><th>配对项目实际</th><th>配对项目预计</th><th>本周偏差系数</th><th>近4周平均系数</th><th>修正工时</th><th>修正负荷</th></tr></thead><tbody>{{range .Data.Metrics}}<tr><td><strong>{{.Name}}</strong><small>{{roleName .Role}}</small></td><td>{{hours .ActualHours}}h</td><td>{{hours .ProjectActualHours}}h</td><td>{{hours .ProjectForecastHours}}h</td><td>{{if .HasBias}}{{printf "%.2f" .Bias}}{{else}}—{{end}}</td><td>{{if .HasAdjusted}}{{printf "%.2f" .CorrectionFactor}}{{else}}积累中{{end}}</td><td>{{if .HasAdjusted}}{{hours .AdjustedHours}}h{{else}}—{{end}}</td><td>{{if .HasAdjusted}}<span class="load-pill">{{pct .AdjustedRate}}</span>{{else}}—{{end}}</td></tr>{{else}}<tr><td colspan="8" class="empty">该周暂无员工数据</td></tr>{{end}}</tbody></table></div>
+</section>
+<section class="panel bias-note"><div class="panel-heading"><div><p class="eyebrow">CALCULATION NOTES</p><h2>修正规则</h2></div></div><p class="muted">员工连续完成前5周填报后，第6周开始计算；最近连续4周都必须存在有效的同项目偏差系数。修正时只用平均系数修正本周配对项目工时，临时“其它”和未匹配项目工时保持原值并计入最终负荷。</p></section>
+{{end}}

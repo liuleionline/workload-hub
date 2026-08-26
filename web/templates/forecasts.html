@@ -1,0 +1,13 @@
+{{define "content"}}
+<section class="form-hero forecast-hero"><div><p class="eyebrow">NEXT WEEK · {{.Data.TargetWeekEnd}}</p><h2>为负责项目安排下周投入</h2><p>按项目预估每位参与人员的工时，系统会自动汇总员工跨项目负荷。</p></div>{{if .Data.Selected.ID}}<div class="form-stat"><span>当前项目</span><strong class="project-name">{{.Data.Selected.ShortName}}</strong></div>{{end}}</section>
+{{if .CurrentUser.IsTestUser}}<div class="notice info"><strong>测试账号模式</strong><span>你可以随时保存下周预估；由本账号录入的预测不会进入正式部门和项目统计。</span></div>{{end}}
+{{if .Data.Projects}}
+<div class="project-tabs" role="navigation" aria-label="选择项目">{{range .Data.Projects}}<a href="/forecasts?project={{.ID}}" class="{{if eq .ID $.Data.Selected.ID}}active{{end}}"><span>{{.ShortName}}</span><small>{{.Code}} · {{.Size}}</small></a>{{end}}</div>
+<form action="/forecasts" method="post" class="panel forecast-form" data-forecast-form>
+  <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"><input type="hidden" name="project_id" value="{{.Data.Selected.ID}}">
+  <div class="panel-heading"><div><p class="eyebrow">RESOURCE PLAN</p><h2>{{if .Data.Selected.Name}}{{.Data.Selected.Name}}{{else}}{{.Data.Selected.ShortName}}{{end}}</h2><p class="muted">总设计师：{{.Data.Selected.ChiefDesigner}} · 执行专业负责人：{{.Data.Selected.ExecutingLeadName}}</p></div><div class="forecast-total"><span>预估合计</span><strong><output data-forecast-total>0.0</output>h</strong></div></div>
+  <div class="table-wrap"><table class="input-table"><thead><tr><th>参与人员</th><th>层级</th><th>当前关系</th><th>下周预计工时</th></tr></thead><tbody>{{range .Data.Rows}}<tr class="{{if not .Participating}}optional-row{{end}}"><td><input type="hidden" name="user_id[]" value="{{.User.ID}}"><strong>{{.User.Name}}</strong><small>{{.User.Email}}</small></td><td>{{.User.RoleName}}</td><td>{{if .Participating}}参与中{{else}}未加入{{end}}</td><td><input class="compact-input" type="number" name="hours[]" min="0" max="168" step="0.5" value="{{if .Hours}}{{.Hours}}{{end}}" placeholder="0" data-forecast-hours></td></tr>{{end}}</tbody></table></div>
+  <div class="form-footer"><p class="muted">填写工时后，未加入人员会自动成为项目参与人员。</p><button class="button primary" type="submit">保存下周预估</button></div>
+</form>
+{{else}}<section class="empty-state"><span>暂无可管理项目</span><h2>先创建一个项目</h2><p>专业负责人需要先创建或被指定为执行专业负责人，才能填写下周预估。</p>{{if hasPerm "projects.create"}}<a class="button primary" href="/projects/new">新建项目</a>{{end}}</section>{{end}}
+{{end}}

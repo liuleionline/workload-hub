@@ -1,0 +1,39 @@
+name: Bug 报告
+description: 报告可复现的功能问题
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: 问题描述
+      description: 请勿上传含真实员工、项目或工时的未遮盖截图。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 复现步骤
+      placeholder: "1. 使用何种角色登录\n2. 进入哪个页面\n3. 执行什么操作"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 预期与实际结果
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 版本或提交
+  - type: dropdown
+    id: role
+    attributes:
+      label: 使用角色
+      options:
+        - 设计师
+        - 专业负责人
+        - 部门领导
+        - 系统管理员
+        - 未登录

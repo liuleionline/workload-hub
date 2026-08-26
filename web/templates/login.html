@@ -1,0 +1,20 @@
+{{define "content"}}
+<main class="auth-card">
+  <section class="auth-intro">
+    <div class="brand auth-brand"><img class="brand-mark" src="/assets/logo-mark.svg?v=20260824-1" width="38" height="38" alt=""><span><strong>载衡</strong><small>人力负荷管理</small></span></div>
+    <p class="eyebrow">DESIGN TEAM CAPACITY</p>
+    <h1>让每一周的投入<br>都清楚可见。</h1>
+    <p>统一记录项目工时、下周预估与团队负荷，为人员安排提供稳定、可追溯的依据。</p>
+    <div class="auth-metric"><span>40h</span><small>标准周可用工时</small></div>
+  </section>
+  <section class="login-panel">
+    <div><p class="eyebrow">SECURE ACCESS</p><h2>登录部门工作台</h2><p class="muted">使用管理员为你建立的公司邮箱账号。</p></div>
+    <form action="/login" method="post" class="stack-form">
+      <label>邮箱<input type="email" name="email" autocomplete="username" required autofocus placeholder="name@company.com"></label>
+      <label>密码<input type="password" name="password" autocomplete="current-password" required placeholder="请输入密码"></label>
+      <button class="button primary wide" type="submit">进入工作台</button>
+    </form>
+    <p class="login-help">忘记密码请联系系统管理员重置。</p>
+  </section>
+</main>
+{{end}}
