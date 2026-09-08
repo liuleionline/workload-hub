@@ -35,6 +35,17 @@
       }
       return select;
     };
+    const ensureDesignDescription=row=>{
+      let field=$('[data-design-description-field]',row);
+      if(!field){
+        field=document.createElement('label');field.className='design-description-field';field.dataset.designDescriptionField='';field.hidden=true;
+        field.innerHTML='简述设计内容<input type="text" name="design_description[]" data-design-description maxlength="200" placeholder="如实简述本周设计内容，例如“建模计算”“基础设计”“梁配筋设计”等">';
+        $('.work-details-grid',row)?.insertAdjacentElement('afterend',field);
+      }
+      const input=$('[data-design-description]',field);
+      if(input&&!input.dataset.ready){input.value=row.dataset.designDescription||'';input.dataset.ready='1'}
+      return field;
+    };
     const applySubitem=row=>{
       const select=$('[data-project-subitem-select]',row),choice=select?.selectedOptions?.[0],hidden=$('[data-project-subitem-value]',row),manual=$('input[data-work-subitem]',row);
       if(hidden)hidden.value=choice?.value||'';
@@ -60,6 +71,13 @@
     };
     workForm.addEventListener('submit',e=>{
       if(e.submitter?.matches('[data-clear-worklog]')){if(!confirm('确定清空本人本周全部实际工时和请假记录吗？此操作会写入审计日志。'))e.preventDefault();return}
+      const missingDesign=$$('[data-work-row]',rows).map(row=>{
+        const field=ensureDesignDescription(row),input=$('[data-design-description]',field);
+        return !field.hidden&&(parseFloat($('input[name="hours[]"]',row)?.value)||0)>0&&!input.value.trim()?input:null;
+      }).find(Boolean);
+      if(missingDesign){
+        e.preventDefault();missingDesign.setCustomValidity('请简述本周设计内容');missingDesign.reportValidity();missingDesign.focus();return;
+      }
       if(payload)payload.value=JSON.stringify($$('[data-work-row]',rows).map(row=>({
         entry_type:$('[data-entry-type]',row)?.value||'project',
         work_category:$('[data-work-category]',row)?.value||'regular',
@@ -67,7 +85,7 @@
         project_subitem_id:$('[data-project-subitem-value]',row)?.value||'',
         project_code:$('[data-project-select]',row)?.selectedOptions?.[0]?.dataset?.projectCode||'',
         hours:$('input[name="hours[]"]',row)?.value||'',
-        work_subitem:$('input[data-work-subitem]',row)?.value||'',work_area:$('input[data-work-area]',row)?.value||'',work_structure:$('input[data-work-structure]',row)?.value||'',work_role:$('input[data-work-role]',row)?.value||'',
+        work_subitem:$('input[data-work-subitem]',row)?.value||'',work_area:$('input[data-work-area]',row)?.value||'',work_structure:$('input[data-work-structure]',row)?.value||'',work_role:$('input[data-work-role]',row)?.value||'',design_description:$('[data-design-description]',row)?.value||'',
         other_description:$('.other-field input',row)?.value||'',end_participation:$('[data-end-check]',row)?.checked||false
       })).filter(entry=>(parseFloat(entry.hours)||0)>0));
     });
@@ -94,6 +112,10 @@
       const role=$('input[data-work-role]',row);if(role)role.required=needsProjectDetails;
       const manual=$('input[data-work-subitem]',row);if(manual)manual.required=needsProjectDetails&&subitemSelect?.hidden;
       const other=$('.other-field input',row);if(other)other.required=type==='other';
+      const designField=ensureDesignDescription(row),designInput=$('[data-design-description]',designField);
+      const needsDesignDescription=needsProjectDetails&&(role?.value||'').includes('设计');
+      designField.hidden=!needsDesignDescription;
+      if(designInput){designInput.required=needsDesignDescription;if(!needsDesignDescription)designInput.setCustomValidity('')}
       const check=$('[data-end-check]',row),hidden=$('[data-end-value]',row);if(check&&hidden)hidden.value=check.checked?'1':'0';
     };
     const refresh=()=>{
@@ -101,7 +123,7 @@
       const total=$$('input[name="hours[]"]',rows).reduce((sum,input)=>sum+(parseFloat(input.value)||0),0);const out=$('[data-total-hours]');if(out)out.textContent=total.toFixed(1);
     };
     rows.addEventListener('change',e=>{const row=e.target.closest('[data-work-row]');if(row){if(e.target.matches('[data-project-subitem-select]'))applySubitem(row);syncRow(row)}refresh()});
-    rows.addEventListener('input',refresh);
+    rows.addEventListener('input',e=>{const row=e.target.closest('[data-work-row]');if(row&&e.target.matches('[data-work-role]'))syncRow(row);if(e.target.matches('[data-design-description]'))e.target.setCustomValidity('');refresh()});
     rows.addEventListener('click',e=>{const button=e.target.closest('[data-remove-work]');if(!button)return;const all=$$('[data-work-row]',rows);if(all.length===1){all[0].querySelectorAll('input').forEach(i=>{if(i.type!=='hidden')i.value=''});all[0].querySelectorAll('select').forEach(s=>s.selectedIndex=0);all[0].dataset.projectId='';return refresh()}button.closest('[data-work-row]').remove();refresh()});
     $('[data-add-work]')?.addEventListener('click',()=>{rows.append(template.content.cloneNode(true));refresh();$$('[data-work-row]',rows).at(-1)?.querySelector('select')?.focus()});
     const leave=$('[data-leave-input]'),leaveOut=$('[data-leave-output]');leave?.addEventListener('input',()=>{if(leaveOut)leaveOut.textContent=(parseFloat(leave.value)||0).toFixed(1)});refresh();

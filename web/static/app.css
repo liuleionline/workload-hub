@@ -59,13 +59,13 @@
 .worklog-fieldset{border:0;padding:0;margin:0;min-width:0}.worklog-fieldset:disabled{opacity:.78}.worklog-fieldset:disabled .button{cursor:not-allowed;transform:none}
 .work-row{grid-template-columns:34px 100px minmax(220px,1fr) 150px 110px 34px;align-items:end}
 .work-details-grid{grid-column:2/6;display:grid;grid-template-columns:minmax(190px,1.2fr) 130px minmax(170px,1fr) minmax(180px,1fr);gap:10px}
-.work-details-grid label{min-width:0}.other-field{grid-column:2/6}.end-field{grid-column:2/6}
+.work-details-grid label{min-width:0}.design-description-field,.other-field{grid-column:2/6}.end-field{grid-column:2/6}
 .site-resident-note{display:none;grid-column:2/6;margin:0;padding:12px 14px;border:1px solid #c8ded5;border-radius:10px;background:#eef7f3;color:#3f5e55;font-size:.76rem}.site-resident-note strong{display:block;color:#176d5b}.site-resident-note span{display:block;margin-top:3px}
 .work-row.is-site .work-details-grid{display:none}.work-row.is-site .site-resident-note{display:block}
-.work-row.is-other .project-field,.work-row.is-other .category-field,.work-row.is-other .work-details-grid,.work-row.is-other .site-resident-note,.work-row.is-other .end-field{display:none}
+.work-row.is-other .project-field,.work-row.is-other .category-field,.work-row.is-other .work-details-grid,.work-row.is-other .design-description-field,.work-row.is-other .site-resident-note,.work-row.is-other .end-field{display:none}
 .work-row.is-other .other-field{display:flex}
 @media(max-width:1100px){.work-details-grid{grid-template-columns:1fr 130px 1fr}.work-details-grid label:last-child{grid-column:2/4}.work-row{grid-template-columns:32px 90px minmax(180px,1fr) 135px 100px 32px}}
-@media(max-width:780px){.work-row{grid-template-columns:30px 1fr 80px 30px}.project-field,.category-field{grid-column:2/4}.work-details-grid,.site-resident-note{grid-column:2/4}.work-details-grid{grid-template-columns:1fr 1fr}.work-details-grid label:last-child{grid-column:auto}.other-field,.end-field{grid-column:2/4}}
+@media(max-width:780px){.work-row{grid-template-columns:30px 1fr 80px 30px}.project-field,.category-field{grid-column:2/4}.work-details-grid,.design-description-field,.site-resident-note{grid-column:2/4}.work-details-grid{grid-template-columns:1fr 1fr}.work-details-grid label:last-child{grid-column:auto}.other-field,.end-field{grid-column:2/4}}
 @media(max-width:520px){.work-details-grid{grid-template-columns:1fr}.work-details-grid label:last-child{grid-column:auto}.leave-panel{align-items:flex-start;flex-direction:column}.leave-panel label{width:100%}}
 
 .project-intro-fields{margin-top:4px}.project-intro-fields textarea{resize:vertical;line-height:1.6}

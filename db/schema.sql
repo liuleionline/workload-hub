@@ -157,6 +157,7 @@ CREATE TABLE IF NOT EXISTS actual_work_entries (
     work_area REAL NOT NULL DEFAULT 0,
     work_structure TEXT NOT NULL DEFAULT '',
     work_role TEXT NOT NULL DEFAULT '',
+    design_description TEXT NOT NULL DEFAULT '',
     work_category TEXT NOT NULL DEFAULT 'regular' CHECK (work_category IN ('regular','site')),
     other_description TEXT NOT NULL DEFAULT '',
     end_participation INTEGER NOT NULL DEFAULT 0,

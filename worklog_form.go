@@ -8,20 +8,21 @@ import (
 )
 
 type worklogFormEntry struct {
-	SubmissionSource string `json:"-"`
-	EntryType        string `json:"entry_type"`
-	WorkCategory     string `json:"work_category"`
-	ProjectID        string `json:"project_id"`
-	ProjectSubitemID string `json:"project_subitem_id"`
-	ProjectCode      string `json:"project_code"`
-	Hours            string `json:"hours"`
-	LegacyContent    string `json:"work_content"`
-	WorkSubitem      string `json:"work_subitem"`
-	WorkArea         string `json:"work_area"`
-	WorkStructure    string `json:"work_structure"`
-	WorkRole         string `json:"work_role"`
-	OtherDescription string `json:"other_description"`
-	EndParticipation bool   `json:"end_participation"`
+	SubmissionSource  string `json:"-"`
+	EntryType         string `json:"entry_type"`
+	WorkCategory      string `json:"work_category"`
+	ProjectID         string `json:"project_id"`
+	ProjectSubitemID  string `json:"project_subitem_id"`
+	ProjectCode       string `json:"project_code"`
+	Hours             string `json:"hours"`
+	LegacyContent     string `json:"work_content"`
+	WorkSubitem       string `json:"work_subitem"`
+	WorkArea          string `json:"work_area"`
+	WorkStructure     string `json:"work_structure"`
+	WorkRole          string `json:"work_role"`
+	DesignDescription string `json:"design_description"`
+	OtherDescription  string `json:"other_description"`
+	EndParticipation  bool   `json:"end_participation"`
 }
 
 func submittedWorklogEntries(r *http.Request) ([]worklogFormEntry, error) {
@@ -51,20 +52,21 @@ func submittedWorklogEntries(r *http.Request) ([]worklogFormEntry, error) {
 			projectID = strings.TrimSpace(valueAt(projectIDs, i))
 		}
 		entries = append(entries, worklogFormEntry{
-			SubmissionSource: "form",
-			EntryType:        entryType,
-			WorkCategory:     valueAt(r.Form["work_category[]"], i),
-			ProjectID:        projectID,
-			ProjectSubitemID: valueAt(r.Form["project_subitem_id[]"], i),
-			ProjectCode:      valueAt(r.Form["project_code[]"], i),
-			Hours:            valueAt(hours, i),
-			LegacyContent:    valueAt(r.Form["work_content[]"], i),
-			WorkSubitem:      valueAt(r.Form["work_subitem[]"], i),
-			WorkArea:         valueAt(r.Form["work_area[]"], i),
-			WorkStructure:    valueAt(r.Form["work_structure[]"], i),
-			WorkRole:         valueAt(r.Form["work_role[]"], i),
-			OtherDescription: valueAt(r.Form["other_description[]"], i),
-			EndParticipation: valueAt(r.Form["end_participation[]"], i) == "1",
+			SubmissionSource:  "form",
+			EntryType:         entryType,
+			WorkCategory:      valueAt(r.Form["work_category[]"], i),
+			ProjectID:         projectID,
+			ProjectSubitemID:  valueAt(r.Form["project_subitem_id[]"], i),
+			ProjectCode:       valueAt(r.Form["project_code[]"], i),
+			Hours:             valueAt(hours, i),
+			LegacyContent:     valueAt(r.Form["work_content[]"], i),
+			WorkSubitem:       valueAt(r.Form["work_subitem[]"], i),
+			WorkArea:          valueAt(r.Form["work_area[]"], i),
+			WorkStructure:     valueAt(r.Form["work_structure[]"], i),
+			WorkRole:          valueAt(r.Form["work_role[]"], i),
+			DesignDescription: valueAt(r.Form["design_description[]"], i),
+			OtherDescription:  valueAt(r.Form["other_description[]"], i),
+			EndParticipation:  valueAt(r.Form["end_participation[]"], i) == "1",
 		})
 	}
 	return entries, nil
@@ -109,6 +111,9 @@ func mergeNativeWorklogEntries(entries []worklogFormEntry, r *http.Request) []wo
 		}
 		if values := r.Form["work_role[]"]; len(values) == len(entries) {
 			entries[i].WorkRole = valueAt(values, i)
+		}
+		if values := r.Form["design_description[]"]; len(values) == len(entries) {
+			entries[i].DesignDescription = valueAt(values, i)
 		}
 		if values := r.Form["other_description[]"]; len(values) == len(entries) {
 			entries[i].OtherDescription = valueAt(values, i)

@@ -118,23 +118,24 @@ func (w WorkContentFields) LegacyText() string {
 }
 
 type WorkEntry struct {
-	ID               int64
-	WeekEnd          string
-	UserID           int64
-	ProjectID        int64
-	ProjectSubitemID int64
-	ProjectCode      string
-	ProjectName      string
-	ProjectShortName string
-	Hours            float64
-	WorkContent      string
-	WorkSubitem      string
-	WorkArea         float64
-	WorkStructure    string
-	WorkRole         string
-	WorkCategory     string
-	OtherDescription string
-	EndParticipation bool
+	ID                int64
+	WeekEnd           string
+	UserID            int64
+	ProjectID         int64
+	ProjectSubitemID  int64
+	ProjectCode       string
+	ProjectName       string
+	ProjectShortName  string
+	Hours             float64
+	WorkContent       string
+	WorkSubitem       string
+	WorkArea          float64
+	WorkStructure     string
+	WorkRole          string
+	DesignDescription string
+	WorkCategory      string
+	OtherDescription  string
+	EndParticipation  bool
 }
 
 type LoginBackground struct {

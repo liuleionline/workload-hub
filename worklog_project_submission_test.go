@@ -53,17 +53,18 @@ func TestWorklogAcceptsVisibleProjectChoiceAndPreservesInvalidSubmission(t *test
 		return recorder
 	}
 	valid := url.Values{
-		"leave_days":          {"0"},
-		"entry_type[]":        {"project"},
-		"project_id[]":        {""},
-		"project_choice[]":    {"3"},
-		"hours[]":             {"8"},
-		"work_subitem[]":      {"210厂房子项"},
-		"work_area[]":         {"49796"},
-		"work_structure[]":    {"钢筋混凝土结构"},
-		"work_role[]":         {"独立设计"},
-		"other_description[]": {""},
-		"end_participation[]": {"0"},
+		"leave_days":           {"0"},
+		"entry_type[]":         {"project"},
+		"project_id[]":         {""},
+		"project_choice[]":     {"3"},
+		"hours[]":              {"8"},
+		"work_subitem[]":       {"210厂房子项"},
+		"work_area[]":          {"49796"},
+		"work_structure[]":     {"钢筋混凝土结构"},
+		"work_role[]":          {"独立设计"},
+		"design_description[]": {"建模计算"},
+		"other_description[]":  {""},
+		"end_participation[]":  {"0"},
 	}
 	recorder := post(valid)
 	if recorder.Code != http.StatusSeeOther {

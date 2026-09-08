@@ -48,6 +48,7 @@ func (a *App) handleWorklogPage(w http.ResponseWriter, r *http.Request) {
 			data.Entries[i].ID = 0
 			data.Entries[i].WeekEnd = data.WeekEnd
 			data.Entries[i].EndParticipation = false
+			data.Entries[i].DesignDescription = ""
 		}
 		data.Carried = len(data.Entries) > 0
 	}
@@ -79,7 +80,7 @@ func (a *App) latestWorkContents(ctx context.Context, userID int64) (map[int64]W
 
 func (a *App) workEntries(ctx context.Context, userID int64, weekEnd string, carry bool) ([]WorkEntry, error) {
 	query := `SELECT a.id,a.week_end,a.user_id,COALESCE(a.project_id,0),COALESCE(a.project_subitem_id,0),COALESCE(p.code,''),COALESCE(p.name,''),COALESCE(p.short_name,''),
-		a.hours,a.work_content,a.work_subitem,a.work_area,a.work_structure,a.work_role,a.work_category,a.other_description,a.end_participation
+		a.hours,a.work_content,a.work_subitem,a.work_area,a.work_structure,a.work_role,a.design_description,a.work_category,a.other_description,a.end_participation
 		FROM actual_work_entries a LEFT JOIN projects p ON p.id=a.project_id
 		WHERE a.user_id=? AND a.week_end=?`
 	if carry {
@@ -95,7 +96,7 @@ func (a *App) workEntries(ctx context.Context, userID int64, weekEnd string, car
 	entries := []WorkEntry{}
 	for rows.Next() {
 		var e WorkEntry
-		if err := rows.Scan(&e.ID, &e.WeekEnd, &e.UserID, &e.ProjectID, &e.ProjectSubitemID, &e.ProjectCode, &e.ProjectName, &e.ProjectShortName, &e.Hours, &e.WorkContent, &e.WorkSubitem, &e.WorkArea, &e.WorkStructure, &e.WorkRole, &e.WorkCategory, &e.OtherDescription, &e.EndParticipation); err != nil {
+		if err := rows.Scan(&e.ID, &e.WeekEnd, &e.UserID, &e.ProjectID, &e.ProjectSubitemID, &e.ProjectCode, &e.ProjectName, &e.ProjectShortName, &e.Hours, &e.WorkContent, &e.WorkSubitem, &e.WorkArea, &e.WorkStructure, &e.WorkRole, &e.DesignDescription, &e.WorkCategory, &e.OtherDescription, &e.EndParticipation); err != nil {
 			return nil, err
 		}
 		entries = append(entries, e)
@@ -201,6 +202,7 @@ func (a *App) handleWorklogSave(w http.ResponseWriter, r *http.Request) {
 			workCategory = "regular"
 		}
 		endPart := formEntry.EndParticipation
+		designDescription := ""
 		var projectID any
 		var fields WorkContentFields
 		content := ""
@@ -303,6 +305,13 @@ func (a *App) handleWorklogSave(w http.ResponseWriter, r *http.Request) {
 					a.worklogError(w, r, "请填写该项目的子项号及子项名称")
 					return
 				}
+				if strings.Contains(fields.Role, "设计") {
+					designDescription = strings.TrimSpace(formEntry.DesignDescription)
+					if designDescription == "" {
+						a.worklogError(w, r, fmt.Sprintf("第%d项工作担任设计职责时，请简述本周设计内容", i+1))
+						return
+					}
+				}
 				content = fields.LegacyText()
 				projectID = id
 				participationStatus := "active"
@@ -325,9 +334,9 @@ func (a *App) handleWorklogSave(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		_, err = tx.ExecContext(r.Context(), `INSERT INTO actual_work_entries(
-			week_end,user_id,project_id,project_subitem_id,hours,work_content,work_subitem,work_area,work_structure,work_role,work_category,other_description,end_participation)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`, isoDate(weekEnd), user.ID, projectID, nullableID(fields.ProjectSubitemID), hours, content,
-			fields.Subitem, fields.Area, fields.Structure, fields.Role, workCategory, other, endPart)
+			week_end,user_id,project_id,project_subitem_id,hours,work_content,work_subitem,work_area,work_structure,work_role,design_description,work_category,other_description,end_participation)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`, isoDate(weekEnd), user.ID, projectID, nullableID(fields.ProjectSubitemID), hours, content,
+			fields.Subitem, fields.Area, fields.Structure, fields.Role, designDescription, workCategory, other, endPart)
 		if err != nil {
 			http.Error(w, "保存失败", 500)
 			return
@@ -363,12 +372,13 @@ func postedWorkEntries(r *http.Request) []WorkEntry {
 	entries := make([]WorkEntry, 0, len(formEntries))
 	for _, formEntry := range formEntries {
 		entry := WorkEntry{
-			WorkCategory:     strings.TrimSpace(formEntry.WorkCategory),
-			WorkSubitem:      strings.TrimSpace(formEntry.WorkSubitem),
-			WorkStructure:    strings.TrimSpace(formEntry.WorkStructure),
-			WorkRole:         strings.TrimSpace(formEntry.WorkRole),
-			OtherDescription: strings.TrimSpace(formEntry.OtherDescription),
-			EndParticipation: formEntry.EndParticipation,
+			WorkCategory:      strings.TrimSpace(formEntry.WorkCategory),
+			WorkSubitem:       strings.TrimSpace(formEntry.WorkSubitem),
+			WorkStructure:     strings.TrimSpace(formEntry.WorkStructure),
+			WorkRole:          strings.TrimSpace(formEntry.WorkRole),
+			DesignDescription: strings.TrimSpace(formEntry.DesignDescription),
+			OtherDescription:  strings.TrimSpace(formEntry.OtherDescription),
+			EndParticipation:  formEntry.EndParticipation,
 		}
 		entry.Hours, _ = strconv.ParseFloat(strings.TrimSpace(formEntry.Hours), 64)
 		entry.WorkArea, _ = strconv.ParseFloat(strings.TrimSpace(formEntry.WorkArea), 64)

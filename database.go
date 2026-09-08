@@ -139,6 +139,7 @@ func (db *DB) ensureSchemaColumns() error {
 			{"work_area", "ALTER TABLE actual_work_entries ADD COLUMN work_area TEXT NOT NULL DEFAULT ''"},
 			{"work_structure", "ALTER TABLE actual_work_entries ADD COLUMN work_structure TEXT NOT NULL DEFAULT ''"},
 			{"work_role", "ALTER TABLE actual_work_entries ADD COLUMN work_role TEXT NOT NULL DEFAULT ''"},
+			{"design_description", "ALTER TABLE actual_work_entries ADD COLUMN design_description TEXT NOT NULL DEFAULT ''"},
 			{"work_category", "ALTER TABLE actual_work_entries ADD COLUMN work_category TEXT NOT NULL DEFAULT 'regular'"},
 		},
 	}

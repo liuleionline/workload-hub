@@ -15,7 +15,7 @@
     <div class="work-rows" data-work-rows>
     {{range .Data.Entries}}
       {{$entry := .}}{{$subitems := index $.Data.ProjectSubitems .ProjectID}}
-      <article class="work-row {{if not .ProjectID}}is-other{{end}}" data-work-row data-project-id="{{.ProjectID}}" data-work-category="{{.WorkCategory}}">
+      <article class="work-row {{if not .ProjectID}}is-other{{end}}" data-work-row data-project-id="{{.ProjectID}}" data-work-category="{{.WorkCategory}}" data-design-description="{{.DesignDescription}}">
         <div class="row-index">01</div>
         <label>类型<select name="entry_type[]" data-entry-type><option value="project" {{if .ProjectID}}selected{{end}}>项目</option><option value="other" {{if not .ProjectID}}selected{{end}}>其它</option></select></label>
         <label class="project-field">项目<select name="project_choice[]" data-project-select><option value="">请选择</option>{{range $p := $.Data.Projects}}{{$saved := index $.Data.LatestWorkDetails $p.ID}}<option value="{{$p.ID}}" data-project-id="{{$p.ID}}" data-project-code="{{$p.Code}}" data-project-subitem-id="{{$saved.ProjectSubitemID}}" data-work-subitem="{{$saved.Subitem}}" data-work-area="{{$saved.Area}}" data-work-structure="{{$saved.Structure}}" data-work-role="{{$saved.Role}}" {{if eq $p.ID $entry.ProjectID}}selected{{end}}>{{$p.ShortName}} · {{$p.Code}}</option>{{end}}</select><input type="hidden" name="project_id[]" value="{{$entry.ProjectID}}" data-project-value></label>

@@ -128,6 +128,7 @@ func TestVisibleWorkDetailsOverrideCorruptedJSONFields(t *testing.T) {
 		"work_area[]":          {"33000"},
 		"work_structure[]":     {"混凝土框剪结构"},
 		"work_role[]":          {"独立设计"},
+		"design_description[]": {"建模计算"},
 		"other_description[]":  {""},
 		"end_participation[]":  {"0"},
 	}
@@ -144,7 +145,7 @@ func TestVisibleWorkDetailsOverrideCorruptedJSONFields(t *testing.T) {
 		t.Fatalf("entries=%d, want 1", len(entries))
 	}
 	entry := entries[0]
-	if entry.WorkSubitem != "倒班宿舍1、倒班宿舍2、全厂装配式" || entry.WorkArea != "33000" || entry.WorkStructure != "混凝土框剪结构" || entry.WorkRole != "独立设计" {
+	if entry.WorkSubitem != "倒班宿舍1、倒班宿舍2、全厂装配式" || entry.WorkArea != "33000" || entry.WorkStructure != "混凝土框剪结构" || entry.WorkRole != "独立设计" || entry.DesignDescription != "建模计算" {
 		t.Fatalf("visible details were not preserved: %+v", entry)
 	}
 }
