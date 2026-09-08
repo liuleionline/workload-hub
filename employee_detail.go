@@ -110,7 +110,7 @@ func (a *App) employeeProjectWork(ctx context.Context, userID int64, weekEnd str
 			item.SiteHours += entry.Hours
 		}
 		item.HasActual = true
-		content := entry.WorkContent
+		content := workContentWithDesignDescription(entry.WorkContent, entry.DesignDescription)
 		if content != "" {
 			seen := false
 			for _, existing := range item.Contents {

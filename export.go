@@ -15,7 +15,7 @@ func (a *App) handleExcelExport(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "导出数据读取失败", 500)
 		return
 	}
-	headers := []string{"周次", "员工", "项目编号", "项目简称", "项目名称", "工作类别", "承担工作/其它内容", "实际工时", "个人完成"}
+	headers := []string{"周次", "员工", "项目编号", "项目简称", "项目名称", "工作类别", "承担工作/其它内容", "简述设计内容", "实际工时", "个人完成"}
 	rows := make([][]xlsxCell, 0, len(data.Rows)+1)
 	header := make([]xlsxCell, len(headers))
 	for i, v := range headers {
@@ -37,7 +37,7 @@ func (a *App) handleExcelExport(w http.ResponseWriter, r *http.Request) {
 		if item.Completed {
 			completed = "是"
 		}
-		rows = append(rows, []xlsxCell{{Text: item.WeekEnd}, {Text: item.UserName}, {Text: item.ProjectCode}, {Text: item.ProjectShortName}, {Text: item.ProjectName}, {Text: category}, {Text: content}, {Number: &item.Hours}, {Text: completed}})
+		rows = append(rows, []xlsxCell{{Text: item.WeekEnd}, {Text: item.UserName}, {Text: item.ProjectCode}, {Text: item.ProjectShortName}, {Text: item.ProjectName}, {Text: category}, {Text: content}, {Text: item.DesignDescription}, {Number: &item.Hours}, {Text: completed}})
 	}
 	book, err := makeXLSX("工时明细", rows)
 	if err != nil {

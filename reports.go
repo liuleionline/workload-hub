@@ -9,9 +9,9 @@ import (
 )
 
 type ReportRow struct {
-	WeekEnd, UserName, ProjectCode, ProjectName, ProjectShortName, WorkContent, WorkCategory, OtherDescription string
-	Hours                                                                                                      float64
-	Completed                                                                                                  bool
+	WeekEnd, UserName, ProjectCode, ProjectName, ProjectShortName, WorkContent, DesignDescription, WorkCategory, OtherDescription string
+	Hours                                                                                                                         float64
+	Completed                                                                                                                     bool
 }
 type ReportsData struct {
 	Year, Quarter int
@@ -101,7 +101,7 @@ func (a *App) reportData(r *http.Request) (ReportsData, error) {
 	if !canAll {
 		selectedUser = user.ID
 	}
-	query := `SELECT a.week_end,u.name,COALESCE(p.code,'其它'),COALESCE(p.name,'其它工作'),COALESCE(p.short_name,'其它'),a.work_content,a.work_category,a.other_description,a.hours,a.end_participation
+	query := `SELECT a.week_end,u.name,COALESCE(p.code,'其它'),COALESCE(p.name,'其它工作'),COALESCE(p.short_name,'其它'),a.work_content,a.design_description,a.work_category,a.other_description,a.hours,a.end_participation
 		FROM actual_work_entries a
 		JOIN users u ON u.id=a.user_id
 		LEFT JOIN projects p ON p.id=a.project_id
@@ -120,7 +120,7 @@ func (a *App) reportData(r *http.Request) (ReportsData, error) {
 	users := map[string]bool{}
 	for rows.Next() {
 		var row ReportRow
-		if err := rows.Scan(&row.WeekEnd, &row.UserName, &row.ProjectCode, &row.ProjectName, &row.ProjectShortName, &row.WorkContent, &row.WorkCategory, &row.OtherDescription, &row.Hours, &row.Completed); err != nil {
+		if err := rows.Scan(&row.WeekEnd, &row.UserName, &row.ProjectCode, &row.ProjectName, &row.ProjectShortName, &row.WorkContent, &row.DesignDescription, &row.WorkCategory, &row.OtherDescription, &row.Hours, &row.Completed); err != nil {
 			return data, err
 		}
 		data.Rows = append(data.Rows, row)

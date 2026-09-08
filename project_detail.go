@@ -141,17 +141,17 @@ func (a *App) projectParticipantDetails(ctx context.Context, projectID int64, we
 	if err := rows.Close(); err != nil {
 		return nil, err
 	}
-	contentRows, err := a.db.QueryContext(ctx, `SELECT a.user_id,a.work_content
+	contentRows, err := a.db.QueryContext(ctx, `SELECT a.user_id,a.work_content,a.design_description
 		FROM actual_work_entries a JOIN users u ON u.id=a.user_id
-		WHERE a.project_id=? AND a.week_end=? AND a.work_content<>'' AND (?=1 OR u.is_test_user=0)
+		WHERE a.project_id=? AND a.week_end=? AND (a.work_content<>'' OR a.design_description<>'') AND (?=1 OR u.is_test_user=0)
 		ORDER BY a.id`, projectID, week, includeTest)
 	if err != nil {
 		return nil, err
 	}
 	for contentRows.Next() {
 		var userID int64
-		var content string
-		if err := contentRows.Scan(&userID, &content); err != nil {
+		var content, designDescription string
+		if err := contentRows.Scan(&userID, &content, &designDescription); err != nil {
 			contentRows.Close()
 			return nil, err
 		}
@@ -159,6 +159,7 @@ func (a *App) projectParticipantDetails(ctx context.Context, projectID int64, we
 		if !exists {
 			continue
 		}
+		content = workContentWithDesignDescription(content, designDescription)
 		seen := false
 		for _, current := range participants[index].Contents {
 			if current == content {

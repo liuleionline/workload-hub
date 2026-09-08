@@ -152,6 +152,18 @@ func (w WorkEntry) WorkFields() WorkContentFields {
 	return WorkContentFields{Subitem: w.WorkSubitem, Area: w.WorkArea, Structure: w.WorkStructure, Role: w.WorkRole}
 }
 
+func workContentWithDesignDescription(content, designDescription string) string {
+	content = strings.TrimSpace(content)
+	designDescription = strings.TrimSpace(designDescription)
+	if designDescription == "" {
+		return content
+	}
+	if content == "" {
+		return "本周设计内容：" + designDescription
+	}
+	return content + "；本周设计内容：" + designDescription
+}
+
 type ForecastEntry struct {
 	TargetWeekEnd string
 	ProjectID     int64
