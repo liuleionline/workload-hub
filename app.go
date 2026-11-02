@@ -35,6 +35,8 @@ type PageData struct {
 	Error                  string
 	Now                    time.Time
 	ReportReminder         bool
+	ReportSubmitted        bool
+	AdminReportStatus      *WorklogSubmissionStatus
 	ReportWindowLabel      string
 	IncompleteProjectCount int
 }
@@ -145,7 +147,21 @@ func (a *App) render(w http.ResponseWriter, r *http.Request, status int, page st
 		data.Permissions = currentPermissions(r)
 		data.CSRFToken = currentCSRF(r)
 		data.ReportReminder = a.reportWindowOpen(r.Context(), data.Now)
+		if data.ReportReminder {
+			weekEnd := isoDate(a.worklogWeekEnd(r.Context(), data.Now))
+			_ = a.db.QueryRowContext(r.Context(), `SELECT
+				EXISTS(SELECT 1 FROM actual_work_entries WHERE user_id=? AND week_end=?) OR
+				EXISTS(SELECT 1 FROM leave_records WHERE user_id=? AND week_end=?)`,
+				user.ID, weekEnd, user.ID, weekEnd).Scan(&data.ReportSubmitted)
+		}
 		data.ReportWindowLabel = a.reportSchedule(r.Context()).Label()
+		if user.IsSystemAdmin {
+			data.AdminReportStatus, err = a.worklogSubmissionStatus(r.Context(), data.Now)
+			if err != nil {
+				slog.Error("填报状态读取失败", "error", err)
+				data.AdminReportStatus = &WorklogSubmissionStatus{Error: "填报状态暂时无法读取，请刷新重试。"}
+			}
+		}
 		data.IncompleteProjectCount = a.incompleteProjectCount(r.Context(), user.ID)
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
