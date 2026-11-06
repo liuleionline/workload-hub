@@ -36,9 +36,39 @@ func parseProjectStages(values []string) ([]string, error) {
 }
 
 func projectNeedsCompletion(p Project) bool {
-	return p.Code == "" || len(p.Code) >= 5 && p.Code[:5] == "INIT-" || p.Name == "" || len(p.Stages) == 0 ||
-		p.StartDate == "" || p.ExpectedEndDate == "" || p.IntroAddress == "" || p.IntroType == "" ||
-		p.IntroScale == "" || p.IntroComponents == ""
+	return len(p.CompletionIssues()) > 0
+}
+
+type ProjectCompletionIssue struct {
+	FieldID string
+	Message string
+}
+
+// CompletionIssues is shared by project status and actionable reminders.
+func (p Project) CompletionIssues() []ProjectCompletionIssue {
+	var issues []ProjectCompletionIssue
+	if p.Code == "" {
+		issues = append(issues, ProjectCompletionIssue{"project-code", "项目编号：未填写"})
+	} else if strings.HasPrefix(p.Code, "INIT-") {
+		issues = append(issues, ProjectCompletionIssue{"project-code", "项目编号：仍为临时编号，请改为正式编号"})
+	}
+	for _, field := range []struct{ id, label, value string }{
+		{"project-name", "项目全名", p.Name},
+		{"project-start-date", "开始日期", p.StartDate},
+		{"project-end-date", "预计结束日期", p.ExpectedEndDate},
+		{"project-intro-address", "项目简介 / 项目地址", p.IntroAddress},
+		{"project-intro-type", "项目简介 / 项目类别", p.IntroType},
+		{"project-intro-scale", "项目简介 / 项目规模", p.IntroScale},
+		{"project-intro-components", "项目简介 / 子项组成", p.IntroComponents},
+	} {
+		if field.value == "" {
+			issues = append(issues, ProjectCompletionIssue{field.id, field.label + "：未填写"})
+		}
+	}
+	if len(p.Stages) == 0 {
+		issues = append(issues, ProjectCompletionIssue{"project-stages", "项目阶段：未选择"})
+	}
+	return issues
 }
 
 func (p Project) HasLead(id int64) bool {

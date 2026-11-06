@@ -83,6 +83,7 @@ go run . import-projects --file examples/initial-projects.csv
 |`APP_COOKIE_SECURE`|`false`|HTTPS 生产环境必须设为 `true`|
 |`APP_BASE_URL`|`http://127.0.0.1:8080`|外部访问地址|
 |`APP_TIMEZONE`|`Asia/Shanghai`|业务时区|
+|`APP_REMINDER_TOKEN_HASH`|空（接口关闭）|专用提醒凭据的 SHA-256（Base64URL，无填充），见[提醒接口](docs/提醒接口.md)|
 
 仓库不包含云主机、账号、域名、反向代理或进程守护配置；运行环境由使用者自行准备。
 

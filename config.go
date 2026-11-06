@@ -9,12 +9,13 @@ import (
 )
 
 type Config struct {
-	Addr         string
-	DatabasePath string
-	BackupDir    string
-	BaseURL      string
-	CookieSecure bool
-	Location     *time.Location
+	Addr              string
+	DatabasePath      string
+	BackupDir         string
+	BaseURL           string
+	CookieSecure      bool
+	Location          *time.Location
+	ReminderTokenHash string
 }
 
 func loadConfig() Config {
@@ -26,12 +27,13 @@ func loadConfig() Config {
 	}
 	secure, _ := strconv.ParseBool(envOr("APP_COOKIE_SECURE", "false"))
 	return Config{
-		Addr:         envOr("APP_ADDR", "127.0.0.1:8080"),
-		DatabasePath: envOr("APP_DB", "./data/workload.db"),
-		BackupDir:    envOr("APP_BACKUP_DIR", "./backup"),
-		BaseURL:      strings.TrimRight(envOr("APP_BASE_URL", "http://127.0.0.1:8080"), "/"),
-		CookieSecure: secure,
-		Location:     loc,
+		Addr:              envOr("APP_ADDR", "127.0.0.1:8080"),
+		DatabasePath:      envOr("APP_DB", "./data/workload.db"),
+		BackupDir:         envOr("APP_BACKUP_DIR", "./backup"),
+		BaseURL:           strings.TrimRight(envOr("APP_BASE_URL", "http://127.0.0.1:8080"), "/"),
+		CookieSecure:      secure,
+		Location:          loc,
+		ReminderTokenHash: envOr("APP_REMINDER_TOKEN_HASH", ""),
 	}
 }
 

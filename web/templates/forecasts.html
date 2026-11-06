@@ -2,7 +2,7 @@
 <section class="form-hero forecast-hero"><div><p class="eyebrow">NEXT WEEK · {{.Data.TargetWeekEnd}}</p><h2>为负责项目安排下周投入</h2><p>按项目预估每位参与人员的工时，系统会自动汇总员工跨项目负荷。</p></div>{{if .Data.Selected.ID}}<div class="form-stat"><span>当前项目</span><strong class="project-name">{{.Data.Selected.ShortName}}</strong></div>{{end}}</section>
 {{if .CurrentUser.IsTestUser}}<div class="notice info"><strong>测试账号模式</strong><span>你可以随时保存下周预估；由本账号录入的预测不会进入正式部门和项目统计。</span></div>{{end}}
 {{if .Data.Projects}}
-<div class="project-tabs" role="navigation" aria-label="选择项目">{{range .Data.Projects}}<a href="/forecasts?project={{.ID}}" class="{{if eq .ID $.Data.Selected.ID}}active{{end}}"><span>{{.ShortName}}</span><small>{{.Code}} · {{.Size}}</small></a>{{end}}</div>
+<nav class="project-tabs project-selector-grid" aria-label="选择预估项目">{{range .Data.Projects}}<a href="/forecasts?project={{.ID}}" class="{{if eq .ID $.Data.Selected.ID}}active{{end}}" {{if eq .ID $.Data.Selected.ID}}aria-current="page"{{end}}><span>{{.ShortName}}</span><small>{{.Code}} · {{.Size}}</small></a>{{end}}</nav>
 <form action="/forecasts" method="post" class="panel forecast-form" data-forecast-form>
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}"><input type="hidden" name="project_id" value="{{.Data.Selected.ID}}">
   <div class="panel-heading"><div><p class="eyebrow">RESOURCE PLAN</p><h2>{{if .Data.Selected.Name}}{{.Data.Selected.Name}}{{else}}{{.Data.Selected.ShortName}}{{end}}</h2><p class="muted">总设计师：{{.Data.Selected.ChiefDesigner}} · 执行专业负责人：{{.Data.Selected.ExecutingLeadName}}</p></div><div class="forecast-total"><span>预估合计</span><strong><output data-forecast-total>0.0</output>h</strong></div></div>

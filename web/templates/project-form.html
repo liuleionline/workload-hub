@@ -4,23 +4,23 @@
   <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
   <div class="panel-heading"><div><p class="eyebrow">PROJECT PROFILE</p><h2>{{if .Data.IsNew}}建立项目档案{{else}}编辑项目档案{{end}}</h2></div><span class="pill">{{if .Data.Project.IsIncomplete}}初始导入项目，资料待校核{{else}}字段带 * 为必填{{end}}</span></div>
   <div class="form-grid three">
-    <label>项目编号 *<input name="code" required value="{{.Data.Project.Code}}" placeholder="临时编号 INIT-001，完善时可替换"></label>
+    <label id="project-code">项目编号 *<input name="code" required value="{{.Data.Project.Code}}" placeholder="临时编号 INIT-001，完善时可替换"></label>
     <label>项目简称 *<input name="short_name" required value="{{.Data.Project.ShortName}}" placeholder="用于看板，如：示例研发中心"></label>
     <label>项目类型 *<select name="size" required>{{range $s := (seq 4)}}{{end}}<option {{if eq .Data.Project.Size "超大"}}selected{{end}}>超大</option><option {{if eq .Data.Project.Size "大"}}selected{{end}}>大</option><option {{if eq .Data.Project.Size "中"}}selected{{end}}>中</option><option {{if eq .Data.Project.Size "小"}}selected{{end}}>小</option></select></label>
-    <label class="span-2">项目名称 *<input name="name" required value="{{.Data.Project.Name}}"></label>
+    <label class="span-2" id="project-name">项目名称 *<input name="name" required value="{{.Data.Project.Name}}"></label>
     <label>项目负责人 / 总设计师 *<input name="chief_designer" required value="{{.Data.Project.ChiefDesigner}}" placeholder="可填写公司其他员工姓名"></label>
-    <label>开始日期 *<input type="date" name="start_date" required value="{{.Data.Project.StartDate}}"></label>
-    <label>预计结束日期 *<input type="date" name="expected_end_date" required value="{{.Data.Project.ExpectedEndDate}}"></label>
+    <label id="project-start-date">开始日期 *<input type="date" name="start_date" required value="{{.Data.Project.StartDate}}"></label>
+    <label id="project-end-date">预计结束日期 *<input type="date" name="expected_end_date" required value="{{.Data.Project.ExpectedEndDate}}"></label>
   </div>
-  <fieldset class="project-stage-fieldset"><legend>项目阶段 *</legend><p class="muted">允许多选；已有项目请由专业负责人结合当前工作内容补全。</p><div class="stage-check-grid">{{range .Data.StageOptions}}<label class="check-card"><input type="checkbox" name="stages" value="{{.}}" {{if $.Data.Project.HasStage .}}checked{{end}}><span><strong>{{.}}</strong></span></label>{{end}}</div></fieldset>
+  <fieldset class="project-stage-fieldset" id="project-stages"><legend>项目阶段 *</legend><p class="muted">允许多选；已有项目请由专业负责人结合当前工作内容补全。</p><div class="stage-check-grid">{{range .Data.StageOptions}}<label class="check-card"><input type="checkbox" name="stages" value="{{.}}" {{if $.Data.Project.HasStage .}}checked{{end}}><span><strong>{{.}}</strong></span></label>{{end}}</div></fieldset>
   <hr>
   <section class="project-intro-fields">
     <div class="panel-heading"><div><p class="eyebrow">PROJECT BRIEF</p><h3>项目简介</h3><p class="muted">已有项目由专业负责人首次登录后补全；项目特点可选，其余四项必填。</p></div></div>
     <div class="form-grid two">
-      <label>项目地址 *<input name="intro_address" required value="{{.Data.Project.IntroAddress}}" placeholder="项目所在城市、区县或具体地址"></label>
-      <label>项目类别 *<input name="intro_type" required value="{{.Data.Project.IntroType}}" placeholder="如：工业、公共建筑、电子、芯片、标准厂房"></label>
-      <label class="span-2">项目规模 *<textarea name="intro_scale" rows="3" required placeholder="总建筑面积、建安总投资及其它规模指标">{{.Data.Project.IntroScale}}</textarea></label>
-      <label class="span-2">子项组成 *<textarea name="intro_components" rows="4" required placeholder="主要子项、各子项用途及规模">{{.Data.Project.IntroComponents}}</textarea></label>
+      <label id="project-intro-address">项目地址 *<input name="intro_address" required value="{{.Data.Project.IntroAddress}}" placeholder="项目所在城市、区县或具体地址"></label>
+      <label id="project-intro-type">项目类别 *<input name="intro_type" required value="{{.Data.Project.IntroType}}" placeholder="如：工业、公共建筑、电子、芯片、标准厂房"></label>
+      <label class="span-2" id="project-intro-scale">项目规模 *<textarea name="intro_scale" rows="3" required placeholder="总建筑面积、建安总投资及其它规模指标">{{.Data.Project.IntroScale}}</textarea></label>
+      <label class="span-2" id="project-intro-components">子项组成 *<textarea name="intro_components" rows="4" required placeholder="主要子项、各子项用途及规模">{{.Data.Project.IntroComponents}}</textarea></label>
       <label class="span-2">项目特点（可选）<textarea name="intro_features" rows="4" placeholder="如：地基特殊、重要业主、总承包、荷载大、微振要求、工期紧等">{{.Data.Project.IntroFeatures}}</textarea></label>
     </div>
   </section>

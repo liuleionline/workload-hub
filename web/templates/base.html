@@ -11,7 +11,7 @@
   <link rel="alternate icon" href="/assets/favicon.ico?v=20260824-1">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png?v=20260824-1">
   <link rel="manifest" href="/assets/site.webmanifest?v=20260824-1">
-  <link rel="stylesheet" href="/assets/app.css?v=20260908-1">
+  <link rel="stylesheet" href="/assets/app.css?v=20261106-1">
   <script defer src="/assets/app.js?v=20260908-1"></script>
 </head>
 <body class="{{if .CurrentUser}}app-shell{{else}}auth-shell{{end}}">
@@ -54,7 +54,17 @@
       <div class="notice warning"><strong>本周填报窗口已开放</strong><span>当前窗口为{{.ReportWindowLabel}}。请完成实际工时填报；专业负责人同时完成下周工时预估。</span><a href="/worklog">立即填写</a></div>
       {{end}}
     {{end}}
-    {{if .IncompleteProjectCount}}<div class="notice info"><strong>{{if .CurrentUser.MustChangePassword}}首次登录后请校核项目{{else}}有 {{.IncompleteProjectCount}} 个项目待完善{{end}}</strong><span>请核对项目编号、项目全名、项目阶段、开始日期和预计结束日期等信息。</span><a href="/projects">去校核</a></div>{{end}}
+    {{if .IncompleteProjects}}
+    <section class="notice info project-completion-notice" aria-label="待完善项目信息">
+      <strong>有 {{len .IncompleteProjects}} 个项目待完善</strong>
+      <p>{{if or (hasPerm "projects.edit_own") (hasPerm "projects.edit_all")}}点击具体缺项，直接定位到对应字段；补全并保存后提醒自动消失。{{else}}请联系项目执行负责人或系统管理员补全以下信息。{{end}}</p>
+      <ul class="project-completion-list">{{range .IncompleteProjects}}{{$project := .}}
+        <li><strong>{{.ShortName}} <span class="project-completion-code">{{.Code}}</span></strong>
+          <ul class="project-completion-fields">{{range .Issues}}<li>{{if or (hasPerm "projects.edit_own") (hasPerm "projects.edit_all")}}<a href="/projects/{{$project.ID}}/edit#{{.FieldID}}">{{.Message}}</a>{{else}}{{.Message}}{{end}}</li>{{end}}</ul>
+        </li>
+      {{end}}</ul>
+    </section>
+    {{end}}
     {{with .AdminReportStatus}}
       {{if .Error}}<div class="notice error"><strong>填报检查</strong><span>{{.Error}}</span></div>
       {{else}}<div class="notice {{if .Missing}}warning{{else}}success{{end}}" data-report-status>

@@ -25,20 +25,20 @@ type App struct {
 }
 
 type PageData struct {
-	Title                  string
-	Page                   string
-	CurrentUser            *User
-	Permissions            map[string]bool
-	CSRFToken              string
-	Data                   any
-	Flash                  string
-	Error                  string
-	Now                    time.Time
-	ReportReminder         bool
-	ReportSubmitted        bool
-	AdminReportStatus      *WorklogSubmissionStatus
-	ReportWindowLabel      string
-	IncompleteProjectCount int
+	Title              string
+	Page               string
+	CurrentUser        *User
+	Permissions        map[string]bool
+	CSRFToken          string
+	Data               any
+	Flash              string
+	Error              string
+	Now                time.Time
+	ReportReminder     bool
+	ReportSubmitted    bool
+	AdminReportStatus  *WorklogSubmissionStatus
+	ReportWindowLabel  string
+	IncompleteProjects []ProjectCompletionNotice
 }
 
 type contextKey string
@@ -107,7 +107,15 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /admin/backups/download", a.withAuth(a.handleBackupDownload))
 	mux.HandleFunc("POST /admin/backups/restore", a.withAuth(a.handleBackupRestore))
 	mux.HandleFunc("GET /admin/audit", a.withPermission("audit.view", a.handleAudit))
-	return a.secureHeaders(a.recoverer(a.loadSession(mux)))
+	sessionHandler := a.loadSession(mux)
+	return a.secureHeaders(a.recoverer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Isolate the service endpoint from browser sessions and their side effects.
+		if r.URL.Path == reminderAPIPath {
+			a.handleWorklogReminders(w, r)
+			return
+		}
+		sessionHandler.ServeHTTP(w, r)
+	})))
 }
 
 func (a *App) render(w http.ResponseWriter, r *http.Request, status int, page string, data PageData) {
@@ -162,7 +170,10 @@ func (a *App) render(w http.ResponseWriter, r *http.Request, status int, page st
 				data.AdminReportStatus = &WorklogSubmissionStatus{Error: "填报状态暂时无法读取，请刷新重试。"}
 			}
 		}
-		data.IncompleteProjectCount = a.incompleteProjectCount(r.Context(), user.ID)
+		data.IncompleteProjects, err = a.incompleteProjects(r.Context(), user.ID)
+		if err != nil {
+			slog.Error("待完善项目读取失败", "error", err)
+		}
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "private, no-store")

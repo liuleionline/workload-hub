@@ -383,15 +383,43 @@ func (a *App) getProject(ctx context.Context, id int64) (*Project, error) {
 	return &p, nil
 }
 
-func (a *App) incompleteProjectCount(ctx context.Context, userID int64) int {
-	var count int
-	_ = a.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM projects
-		WHERE status='active'
-		AND EXISTS (SELECT 1 FROM project_leads pl WHERE pl.project_id=projects.id AND pl.user_id=?)
-		AND (code LIKE 'INIT-%' OR name='' OR start_date='' OR expected_end_date=''
-			OR intro_address='' OR intro_type='' OR intro_scale='' OR intro_components=''
-			OR NOT EXISTS (SELECT 1 FROM project_stages ps WHERE ps.project_id=projects.id))`, userID).Scan(&count)
-	return count
+type ProjectCompletionNotice struct {
+	ID        int64
+	ShortName string
+	Code      string
+	Issues    []ProjectCompletionIssue
+}
+
+func (a *App) incompleteProjects(ctx context.Context, userID int64) ([]ProjectCompletionNotice, error) {
+	rows, err := a.db.QueryContext(ctx, `SELECT p.id,p.short_name,p.code,p.name,p.start_date,p.expected_end_date,
+		p.intro_address,p.intro_type,p.intro_scale,p.intro_components,
+		COALESCE((SELECT group_concat(stage,',') FROM project_stages WHERE project_id=p.id),'')
+		FROM projects p WHERE p.status='active'
+		AND EXISTS (SELECT 1 FROM project_leads pl WHERE pl.project_id=p.id AND pl.user_id=?)
+		ORDER BY p.short_name,p.id`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var notices []ProjectCompletionNotice
+	for rows.Next() {
+		var p Project
+		var stages string
+		if err := rows.Scan(&p.ID, &p.ShortName, &p.Code, &p.Name, &p.StartDate, &p.ExpectedEndDate,
+			&p.IntroAddress, &p.IntroType, &p.IntroScale, &p.IntroComponents, &stages); err != nil {
+			return nil, err
+		}
+		if stages != "" {
+			p.Stages, err = parseProjectStages(strings.Split(stages, ","))
+			if err != nil {
+				return nil, err
+			}
+		}
+		if issues := p.CompletionIssues(); len(issues) > 0 {
+			notices = append(notices, ProjectCompletionNotice{ID: p.ID, ShortName: p.ShortName, Code: p.Code, Issues: issues})
+		}
+	}
+	return notices, rows.Err()
 }
 
 func (a *App) canViewProject(r *http.Request, p Project) bool {

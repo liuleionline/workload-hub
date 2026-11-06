@@ -14,7 +14,11 @@ type WorklogSubmissionStatus struct {
 }
 
 func (a *App) worklogSubmissionStatus(ctx context.Context, now time.Time) (*WorklogSubmissionStatus, error) {
-	status := &WorklogSubmissionStatus{WeekEnd: isoDate(a.worklogWeekEnd(ctx, now))}
+	return a.worklogSubmissionStatusForWeek(ctx, isoDate(a.worklogWeekEnd(ctx, now)))
+}
+
+func (a *App) worklogSubmissionStatusForWeek(ctx context.Context, weekEnd string) (*WorklogSubmissionStatus, error) {
+	status := &WorklogSubmissionStatus{WeekEnd: weekEnd}
 	rows, err := a.db.QueryContext(ctx, `SELECT u.id,u.name,
 		EXISTS(SELECT 1 FROM actual_work_entries a WHERE a.user_id=u.id AND a.week_end=?) OR
 		EXISTS(SELECT 1 FROM leave_records l WHERE l.user_id=u.id AND l.week_end=?)

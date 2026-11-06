@@ -49,8 +49,8 @@ func TestAssignedProjectLeadCanViewAndEditButNotArchive(t *testing.T) {
 	if len(projects) != 1 || projects[0].ID != projectID {
 		t.Fatalf("assigned lead projects=%v, want project %d", projects, projectID)
 	}
-	if got := app.incompleteProjectCount(ctx, leadID); got != 1 {
-		t.Fatalf("incomplete project reminders=%d, want 1", got)
+	if got, err := app.incompleteProjects(ctx, leadID); err != nil || len(got) != 1 {
+		t.Fatalf("incomplete project reminders=%v, error=%v, want 1", got, err)
 	}
 
 	request := httptest.NewRequest("GET", "/projects/1", nil)

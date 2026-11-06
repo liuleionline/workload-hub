@@ -86,3 +86,20 @@ html{font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
 .confidential{border-top-width:1px;box-shadow:inset 0 3px 0 #d8a173}
 
 .brand-mark{width:38px;height:38px;border-radius:10px;background:transparent;display:block;flex:0 0 auto}
+
+/* Project completion links and the wrapping forecast project selector. */
+.notice.project-completion-notice{display:block}
+.project-completion-notice>p{margin:4px 0 8px}
+.project-completion-list{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.project-completion-code{font-weight:400;overflow-wrap:anywhere}
+.project-completion-fields{display:flex;flex-wrap:wrap;gap:4px 20px;list-style:none;padding:0;margin:4px 0 0}
+.project-completion-fields li{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.project-completion-fields a{display:inline-block;padding:8px 0;line-height:1.6;text-decoration:underline;text-underline-offset:3px}
+.project-completion-fields a:focus-visible,.project-selector-grid a:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+.project-form [id^="project-"]{scroll-margin-top:24px}
+.project-form [id^="project-"]:target{outline:2px solid var(--green);outline-offset:6px;border-radius:4px}
+.project-tabs.project-selector-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,180px),1fr));gap:8px;overflow:visible;padding-bottom:0}
+.project-selector-grid a{min-width:0;min-height:76px;overflow-wrap:anywhere}
+.project-selector-grid a:hover{border-color:var(--green)}
+.project-selector-grid a small{color:#53645e}
+@media(max-width:520px){.project-tabs.project-selector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.project-selector-grid a{padding:10px}.project-completion-fields{display:block}.project-completion-fields a{padding:10px 0}}
