@@ -261,10 +261,8 @@ func (a *App) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 	weeks, err2 := strconv.Atoi(r.FormValue("alert_weeks"))
 	alertHours, err3 := strconv.ParseFloat(r.FormValue("alert_hours"), 64)
 	openWeekday, err4 := strconv.Atoi(r.FormValue("report_open_weekday"))
-	closeWeekday, err5 := strconv.Atoi(r.FormValue("report_close_weekday"))
 	openMinute, err6 := parseClockMinute(r.FormValue("report_open_time"))
-	closeMinute, err7 := parseClockMinute(r.FormValue("report_close_time"))
-	schedule := ReportSchedule{OpenWeekday: time.Weekday(openWeekday), OpenMinute: openMinute, CloseWeekday: time.Weekday(closeWeekday), CloseMinute: closeMinute}
+	schedule := reportScheduleFromStart(time.Weekday(openWeekday), openMinute)
 	thresholds := []float64{}
 	for _, key := range []string{"threshold_idle", "threshold_light", "threshold_normal", "threshold_busy"} {
 		v, e := strconv.ParseFloat(r.FormValue(key), 64)
@@ -273,7 +271,7 @@ func (a *App) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 		}
 		thresholds = append(thresholds, v)
 	}
-	if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err5 != nil || err6 != nil || err7 != nil || !schedule.Valid() ||
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err6 != nil || !schedule.Valid() ||
 		workday <= 0 || workday > 12 || weeks < 1 || weeks > 12 || alertHours <= 0 || !(thresholds[0] < thresholds[1] && thresholds[1] < thresholds[2] && thresholds[2] < thresholds[3]) {
 		http.Error(w, "设置值无效，请检查阈值顺序和数字范围", 400)
 		return
@@ -283,7 +281,7 @@ func (a *App) handleSettingsSave(w http.ResponseWriter, r *http.Request) {
 		"workday_hours": fmt.Sprintf("%g", workday), "alert_consecutive_weeks": strconv.Itoa(weeks),
 		"alert_hours_threshold": fmt.Sprintf("%g", alertHours), "load_thresholds": fmt.Sprintf("%g,%g,%g,%g", thresholds[0], thresholds[1], thresholds[2], thresholds[3]),
 		"report_open_weekday": strconv.Itoa(openWeekday), "report_open_minute": strconv.Itoa(openMinute),
-		"report_close_weekday": strconv.Itoa(closeWeekday), "report_close_minute": strconv.Itoa(closeMinute),
+		"report_close_weekday": strconv.Itoa(int(schedule.CloseWeekday)), "report_close_minute": strconv.Itoa(schedule.CloseMinute),
 	}
 	tx, _ := a.db.BeginTx(r.Context(), nil)
 	defer tx.Rollback()

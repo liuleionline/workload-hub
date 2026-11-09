@@ -25,20 +25,21 @@ type App struct {
 }
 
 type PageData struct {
-	Title              string
-	Page               string
-	CurrentUser        *User
-	Permissions        map[string]bool
-	CSRFToken          string
-	Data               any
-	Flash              string
-	Error              string
-	Now                time.Time
-	ReportReminder     bool
-	ReportSubmitted    bool
-	AdminReportStatus  *WorklogSubmissionStatus
-	ReportWindowLabel  string
-	IncompleteProjects []ProjectCompletionNotice
+	Title                string
+	Page                 string
+	CurrentUser          *User
+	Permissions          map[string]bool
+	CSRFToken            string
+	Data                 any
+	Flash                string
+	Error                string
+	Now                  time.Time
+	ReportReminder       bool
+	ReportSubmitted      bool
+	AdminReportStatus    *WorklogSubmissionStatus
+	ReportWindowLabel    string
+	ReportCalendarNotice string
+	IncompleteProjects   []ProjectCompletionNotice
 }
 
 type contextKey string
@@ -162,7 +163,14 @@ func (a *App) render(w http.ResponseWriter, r *http.Request, status int, page st
 				EXISTS(SELECT 1 FROM leave_records WHERE user_id=? AND week_end=?)`,
 				user.ID, weekEnd, user.ID, weekEnd).Scan(&data.ReportSubmitted)
 		}
-		data.ReportWindowLabel = a.reportSchedule(r.Context()).Label()
+		if window, windowErr := a.reportingWindowAt(r.Context(), data.Now); windowErr == nil {
+			data.ReportWindowLabel = window.Label()
+			if !window.Required {
+				data.ReportCalendarNotice = window.Label()
+			}
+		} else {
+			data.ReportCalendarNotice = "填报日历暂不可用或窗口重叠，已暂停普通填报和自动提醒，请管理员检查系统设置。"
+		}
 		if user.IsSystemAdmin {
 			data.AdminReportStatus, err = a.worklogSubmissionStatus(r.Context(), data.Now)
 			if err != nil {

@@ -42,7 +42,7 @@ func (a *App) handleWorklogPage(w http.ResponseWriter, r *http.Request) {
 		data.Submitted = true
 	}
 	if len(data.Entries) == 0 && !data.Submitted && r.URL.Query().Get("cleared") != "1" {
-		previous := isoDate(weekEnd.AddDate(0, 0, -7))
+		previous := isoDate(a.previousRequiredReportWeek(r.Context(), weekEnd))
 		data.Entries, _ = a.workEntries(r.Context(), user.ID, previous, true)
 		for i := range data.Entries {
 			data.Entries[i].ID = 0

@@ -185,14 +185,14 @@ func TestSubmittedWorklogRendersSavedEntriesForEditing(t *testing.T) {
 
 func TestConfigurableReportSchedule(t *testing.T) {
 	loc := time.FixedZone("CST", 8*3600)
-	schedule := ReportSchedule{OpenWeekday: time.Thursday, OpenMinute: 15 * 60, CloseWeekday: time.Friday, CloseMinute: 18 * 60}
+	schedule := reportScheduleFromStart(time.Thursday, 15*60)
 	if !schedule.Valid() {
 		t.Fatal("Thursday to Friday schedule should be valid")
 	}
 	if !reportWindowOpenWithSchedule(time.Date(2026, 8, 13, 15, 0, 0, 0, loc), schedule) {
 		t.Fatal("custom window should open at configured time")
 	}
-	if reportWindowOpenWithSchedule(time.Date(2026, 8, 14, 18, 0, 0, 0, loc), schedule) {
+	if reportWindowOpenWithSchedule(time.Date(2026, 8, 14, 15, 0, 0, 0, loc), schedule) {
 		t.Fatal("custom window should close at configured time")
 	}
 }

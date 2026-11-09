@@ -19,6 +19,10 @@ func defaultReportSchedule() ReportSchedule {
 	return ReportSchedule{OpenWeekday: time.Friday, OpenMinute: 12 * 60, CloseWeekday: time.Saturday, CloseMinute: 12 * 60}
 }
 
+func reportScheduleFromStart(day time.Weekday, minute int) ReportSchedule {
+	return ReportSchedule{OpenWeekday: day, OpenMinute: minute, CloseWeekday: (day + 1) % 7, CloseMinute: minute}
+}
+
 func reportDayOffset(day time.Weekday) int {
 	if day == time.Sunday {
 		return 2
@@ -82,7 +86,7 @@ func parseClockMinute(value string) (int, error) {
 }
 
 func (s ReportSchedule) Label() string {
-	return fmt.Sprintf("每%s%s至%s%s", weekdayName(s.OpenWeekday), minuteLabel(s.OpenMinute), weekdayName(s.CloseWeekday), minuteLabel(s.CloseMinute))
+	return fmt.Sprintf("通常每%s%s开放，持续24小时；休息日提前至最近工作日，开启4小时后邮件提醒；整周休假免填", weekdayName(s.OpenWeekday), minuteLabel(s.OpenMinute))
 }
 
 func (s ReportSchedule) Valid() bool {
@@ -92,7 +96,7 @@ func (s ReportSchedule) Valid() bool {
 	}
 	weekEnd := time.Date(2026, 8, 7, 0, 0, 0, 0, time.UTC)
 	start, end := reportWindowWithSchedule(weekEnd, s)
-	return end.After(start) && end.Sub(start) < 7*24*time.Hour
+	return end.Sub(start) == 24*time.Hour
 }
 
 func (a *App) reportSchedule(ctx context.Context) ReportSchedule {
@@ -103,12 +107,7 @@ func (a *App) reportSchedule(ctx context.Context) ReportSchedule {
 	if value, err := strconv.Atoi(a.setting(ctx, "report_open_minute", "720")); err == nil {
 		schedule.OpenMinute = value
 	}
-	if value, err := strconv.Atoi(a.setting(ctx, "report_close_weekday", "6")); err == nil {
-		schedule.CloseWeekday = time.Weekday(value)
-	}
-	if value, err := strconv.Atoi(a.setting(ctx, "report_close_minute", "720")); err == nil {
-		schedule.CloseMinute = value
-	}
+	schedule = reportScheduleFromStart(schedule.OpenWeekday, schedule.OpenMinute)
 	if !schedule.Valid() {
 		return defaultReportSchedule()
 	}
@@ -116,15 +115,24 @@ func (a *App) reportSchedule(ctx context.Context) ReportSchedule {
 }
 
 func (a *App) reportWindowOpen(ctx context.Context, now time.Time) bool {
-	return reportWindowOpenWithSchedule(now, a.reportSchedule(ctx))
+	window, err := a.reportingWindowAt(ctx, now)
+	return err == nil && window.Open(now)
 }
 
 func (a *App) reportWindow(ctx context.Context, weekEnd time.Time) (time.Time, time.Time) {
-	return reportWindowWithSchedule(weekEnd, a.reportSchedule(ctx))
+	window, err := a.reportingWindowForWeek(ctx, weekEnd)
+	if err != nil {
+		return reportWindowWithSchedule(weekEnd, a.reportSchedule(ctx))
+	}
+	return window.Start, window.End
 }
 
 func (a *App) worklogWeekEnd(ctx context.Context, now time.Time) time.Time {
-	return worklogWeekEndWithSchedule(now, a.reportSchedule(ctx))
+	window, err := a.reportingWindowAt(ctx, now)
+	if err != nil {
+		return worklogWeekEndWithSchedule(now, a.reportSchedule(ctx))
+	}
+	return window.WeekEnd
 }
 
 func (a *App) forecastTargetWeekEnd(ctx context.Context, now time.Time) time.Time {

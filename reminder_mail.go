@@ -188,11 +188,11 @@ func (a *App) executeMailReminders(ctx context.Context, state *sql.DB, send bool
 	}
 	result.WeekEnd, result.Missing = snapshot.WeekEnd, len(snapshot.Missing)
 	if !snapshot.WindowOpen {
-		result.Status = "window_closed"
+		result.Status = snapshot.Reason
 		return result, nil
 	}
 	if !snapshot.ShouldRemind {
-		result.Status = "all_submitted"
+		result.Status = snapshot.Reason
 		return result, nil
 	}
 	from := envOr("APP_SMTP_USERNAME", "")

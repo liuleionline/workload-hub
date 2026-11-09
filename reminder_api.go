@@ -33,6 +33,7 @@ type WorklogReminderResponse struct {
 	WeekEnd       string              `json:"week_end"`
 	WindowStart   string              `json:"window_start"`
 	WindowEnd     string              `json:"window_end"`
+	ReminderAt    string              `json:"reminder_at,omitempty"`
 	WindowOpen    bool                `json:"window_open"`
 	ShouldRemind  bool                `json:"should_remind"`
 	Reason        string              `json:"reason"`
@@ -79,17 +80,22 @@ func (a *App) handleWorklogReminders(w http.ResponseWriter, r *http.Request) {
 
 func (a *App) worklogReminderSnapshot(ctx context.Context, now time.Time) (*WorklogReminderResponse, error) {
 	now = now.In(a.cfg.Location)
-	schedule, err := a.reminderSchedule(ctx)
+	window, err := a.reportingWindowAt(ctx, now)
 	if err != nil {
 		return nil, err
 	}
-	weekEnd := worklogWeekEndWithSchedule(now, schedule)
-	start, end := reportWindowWithSchedule(weekEnd, schedule)
+	weekEnd, start, end := window.WeekEnd, window.Start, window.End
+	reminderAt := start.Add(reminderDelay)
 	response := &WorklogReminderResponse{
 		SchemaVersion: 1, CheckedAt: now.Format(time.RFC3339), Timezone: a.cfg.Location.String(),
 		WeekEnd: isoDate(weekEnd), WindowStart: start.Format(time.RFC3339), WindowEnd: end.Format(time.RFC3339),
-		WindowOpen: !now.Before(start) && now.Before(end), Reason: "window_closed", Missing: []ReminderRecipient{},
+		WindowOpen: window.Open(now), Reason: "window_closed", Missing: []ReminderRecipient{},
 	}
+	if !window.Required {
+		response.Reason = "holiday_week"
+		return response, nil
+	}
+	response.ReminderAt = reminderAt.Format(time.RFC3339)
 	if !response.WindowOpen {
 		return response, nil
 	}
@@ -102,9 +108,17 @@ func (a *App) worklogReminderSnapshot(ctx context.Context, now time.Time) (*Work
 	for _, user := range status.Missing {
 		response.Missing = append(response.Missing, ReminderRecipient{UserID: user.ID, Name: user.Name})
 	}
-	response.ShouldRemind = len(response.Missing) > 0
-	if response.ShouldRemind {
-		response.Reason = "missing_submissions"
+	if len(response.Missing) > 0 {
+		// The scheduler checks once per minute. Only this minute is eligible:
+		// no early send, no late catch-up after a restart or a failed batch.
+		response.Reason = "reminder_not_due"
+		if !now.Before(reminderAt) {
+			response.Reason = "reminder_time_passed"
+			if now.Before(reminderAt.Add(time.Minute)) {
+				response.ShouldRemind = true
+				response.Reason = "missing_submissions"
+			}
+		}
 	}
 	return response, nil
 }
@@ -112,13 +126,12 @@ func (a *App) worklogReminderSnapshot(ctx context.Context, now time.Time) (*Work
 // Unlike interactive pages, automation must fail closed on unreadable/invalid settings.
 func (a *App) reminderSchedule(ctx context.Context) (ReportSchedule, error) {
 	var schedule ReportSchedule
-	var openDay, closeDay int
+	var openDay int
 	fields := []struct {
 		key string
 		out *int
 	}{
 		{"report_open_weekday", &openDay}, {"report_open_minute", &schedule.OpenMinute},
-		{"report_close_weekday", &closeDay}, {"report_close_minute", &schedule.CloseMinute},
 	}
 	for _, field := range fields {
 		var value string
@@ -131,7 +144,7 @@ func (a *App) reminderSchedule(ctx context.Context) (ReportSchedule, error) {
 		}
 		*field.out = n
 	}
-	schedule.OpenWeekday, schedule.CloseWeekday = time.Weekday(openDay), time.Weekday(closeDay)
+	schedule = reportScheduleFromStart(time.Weekday(openDay), schedule.OpenMinute)
 	if !schedule.Valid() {
 		return schedule, fmt.Errorf("invalid reporting schedule")
 	}

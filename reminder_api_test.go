@@ -125,7 +125,7 @@ func TestReminderSnapshotUsesReportingWindowAndSharedSubmissionRules(t *testing.
 		if err != nil {
 			t.Fatal(err)
 		}
-		if result.WindowOpen != test.open || result.ShouldRemind != test.open {
+		if result.WindowOpen != test.open || result.ShouldRemind != (test.at == "2026-11-06 16:00") {
 			t.Fatalf("at=%s result=%+v", test.at, result)
 		}
 		if !test.open {

@@ -54,6 +54,7 @@
       <div class="notice warning"><strong>本周填报窗口已开放</strong><span>当前窗口为{{.ReportWindowLabel}}。请完成实际工时填报；专业负责人同时完成下周工时预估。</span><a href="/worklog">立即填写</a></div>
       {{end}}
     {{end}}
+    {{if .ReportCalendarNotice}}<div class="notice info" role="status"><strong>填报安排</strong><span>{{.ReportCalendarNotice}}</span></div>{{end}}
     {{if .IncompleteProjects}}
     <section class="notice info project-completion-notice" aria-label="待完善项目信息">
       <strong>有 {{len .IncompleteProjects}} 个项目待完善</strong>
@@ -67,6 +68,7 @@
     {{end}}
     {{with .AdminReportStatus}}
       {{if .Error}}<div class="notice error"><strong>填报检查</strong><span>{{.Error}}</span></div>
+      {{else if .Exempt}}<div class="notice info" data-report-status><strong>本统计周无需填报</strong><span>统计周（周五）：{{.WeekEnd}}；上周六至本周五均无工作日，不列为漏报，也不发送提醒。</span></div>
       {{else}}<div class="notice {{if .Missing}}warning{{else}}success{{end}}" data-report-status>
         <strong>{{if $.ReportReminder}}本周{{else}}上次填报周{{end}}{{if .Missing}}未填报：{{len .Missing}} 人{{else}}全部已填报{{end}}</strong>
         <span>统计周（周五）：{{.WeekEnd}} · 已填报 {{.Submitted}} / {{.Total}} 人（不含测试及停用账号）。{{if .Missing}}<br>未填报人员：{{range $i,$user := .Missing}}{{if $i}}、{{end}}{{if hasPerm "dashboard.department"}}<a href="/employees/{{$user.ID}}?week_end={{$.AdminReportStatus.WeekEnd}}">{{$user.Name}}</a>{{else}}{{$user.Name}}{{end}}{{end}}{{end}}</span>
