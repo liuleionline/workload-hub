@@ -17,10 +17,18 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "用法: workload-hub <serve|init-admin|import-users|import-projects|backup>")
+		fmt.Fprintln(os.Stderr, "用法: workload-hub <serve|init-admin|import-users|import-projects|backup|send-reminders>")
 		os.Exit(2)
 	}
 	cfg := loadConfig()
+	// A scheduled reader must not migrate or seed the production database.
+	if os.Args[1] == "send-reminders" {
+		if err := runMailReminders(cfg, os.Args[2:]); err != nil {
+			slog.Error("邮件提醒未完成", "error", err)
+			os.Exit(1)
+		}
+		return
+	}
 	db, err := openDatabase(cfg.DatabasePath)
 	if err != nil {
 		slog.Error("数据库初始化失败", "error", err)
