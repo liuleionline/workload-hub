@@ -32,7 +32,7 @@
 
 ## 环境要求
 
-- Go 1.26.6 或更高的安全补丁版本
+- Go 1.26.10 或更高的安全补丁版本
 - Windows、macOS 或 Linux 均可用于本地开发
 - 运行方式和网络环境由使用者自行选择
 - 无需 MySQL、Redis、Node.js 或 Docker

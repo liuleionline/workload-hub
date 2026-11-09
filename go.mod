@@ -1,6 +1,6 @@
 module workload-hub
 
-go 1.26.6
+go 1.26.10
 
 require modernc.org/sqlite v1.55.0
 
